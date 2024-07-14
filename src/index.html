@@ -9,42 +9,12 @@
   </head>
 
   <body>
-    <div class="container">
-      <h1>Welcome to Tauri!</h1>
-
-      <div class="row">
-        <a href="https://tauri.app" target="_blank">
-          <img src="/assets/tauri.svg" class="logo tauri" alt="Tauri logo" />
-        </a>
-        <a
-          href="https://developer.mozilla.org/en-US/docs/Web/JavaScript"
-          target="_blank"
-        >
-          <img
-            src="/assets/javascript.svg"
-            class="logo vanilla"
-            alt="JavaScript logo"
-          />
-        </a>
-      </div>
-
-      <p>Click on the Tauri logo to learn more about the framework</p>
-
-      <form class="row" id="greet-form">
-        <input id="greet-input" placeholder="Enter a name..." />
-        <button type="submit">Greet</button>
-      </form>
-
-      <p id="greet-msg"></p>
-
-      <div class="container">
-        <div class="draggable" draggable="true">I love HTML</div>
-        <div class="draggable" draggable="true">CSS is fun</div>
-      </div>
-      <div class="container">
-        <div class="draggable" draggable="true">JS is flaky</div>
-      </div>
-      
+    <div class="container" style="border: solid red; width:500px;">
+      <div class="draggable" draggable="true" style="border: solid green; width:100px;">I love HTML</div>
+      <div class="draggable" draggable="true" style="border: solid green; width:100px;">CSS is fun</div>
+    </div>
+    <div class="container" style="border: solid grey; margin-top: 50px; width:500px;">
+      <div class="draggable" draggable="true" style="border: solid blue; width:100px;">JS is flaky</div>
     </div>
   </body>
 </html>

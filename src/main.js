@@ -9,25 +9,38 @@ async function greet() {
 }
 
 window.addEventListener("DOMContentLoaded", () => {
-  greetInputEl = document.querySelector("#greet-input");
-  greetMsgEl = document.querySelector("#greet-msg");
-  document.querySelector("#greet-form").addEventListener("submit", (e) => {
-    e.preventDefault();
-    greet();
-  });
+  // greetInputEl = document.querySelector("#greet-input");
+  // greetMsgEl = document.querySelector("#greet-msg");
+  // document.querySelector("#greet-form").addEventListener("submit", (e) => {
+  //   e.preventDefault();
+  //   greet();
+  // });
 
-  const draggables = document.querySelectorAll(".draggable")
+  const draggables = document.querySelectorAll(".draggable");
   draggables.forEach(draggable => {
-    draggable.addEventListener("dragstart", function() {
-      console.log("dragstart");
-      console.log(this);
-      this.classList.add("dragging");
+    draggable.addEventListener("dragstart", function(event) {
+      draggable.classList.add("dragging");
+      event.dataTransfer.setData('text/html', null);
     });
     draggable.addEventListener("dragend", function() {
-      this.classList.remove("dragging");
+      draggable.classList.remove("dragging");
     });
   });
 
+  const containers = document.querySelectorAll(".container");
+  containers.forEach(container => {
+
+    container.addEventListener("dragover", function(event) {
+      event.preventDefault();
+    });
+
+    container.addEventListener("drop", function(event) {
+      event.preventDefault();
+      const draggedElement = document.querySelector(".dragging");
+      draggedElement.parentNode.removeChild(draggedElement);
+      container.appendChild(draggedElement);
+    });
+  });
 });
 
 
