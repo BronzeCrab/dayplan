@@ -1,11 +1,29 @@
-# Tauri + Vanilla
+## What is it:
 
-This template should help get you started developing with Tauri in vanilla HTML, CSS and Javascript.
+It's rust-based task tracker
 
-## Recommended IDE Setup
+## How to run for dev:
 
-- [VS Code](https://code.visualstudio.com/) + [Tauri](https://marketplace.visualstudio.com/items?itemName=tauri-apps.tauri-vscode) + [rust-analyzer](https://marketplace.visualstudio.com/items?itemName=rust-lang.rust-analyzer)
+```bash
+yarn add @tauri-apps/cli
+```
 
+```bash
+cd src-tauri
+```
+
+```bash
+yarn tauri dev
+```
+
+## How to add rust dep:
+```bash
+cd src-tauri
+```
+
+```bash
+cargo add <dep_name>
+```
 
 ## Useful links:
 
@@ -22,3 +40,5 @@ https://developer.mozilla.org/en-US/docs/Web/API/HTMLElement/dragover_event
 https://developer.mozilla.org/en-US/docs/Web/API/HTMLElement/drag_event
 
 https://www.chartjs.org/docs/latest/getting-started/
+
+https://github.com/rusqlite/rusqlite
