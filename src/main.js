@@ -8,6 +8,10 @@ async function greet() {
   greetMsgEl.textContent = await invoke("greet", { name: greetInputEl.value });
 }
 
+async function updateCard(cardText) {
+  greetMsgEl.textContent = await invoke("update_card", { cardText: cardText });
+}
+
 window.addEventListener("DOMContentLoaded", () => {
   greetInputEl = document.querySelector("#greet-input");
   greetMsgEl = document.querySelector("#greet-msg");
@@ -24,6 +28,9 @@ window.addEventListener("DOMContentLoaded", () => {
     });
     draggable.addEventListener("dragend", function() {
       draggable.classList.remove("dragging");
+    });
+    draggable.addEventListener("input", function() {
+      updateCard(draggable.textContent);
     });
   });
 

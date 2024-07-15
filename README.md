@@ -25,7 +25,7 @@ cd src-tauri
 cargo add <dep_name>
 ```
 
-## Useful links:
+## References links:
 
 https://medium.com/codex/drag-n-drop-with-vanilla-javascript-75f9c396ecd
 
