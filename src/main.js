@@ -9,7 +9,7 @@ async function greet() {
 }
 
 async function updateCard(cardText, cardId) {
-  greetMsgEl.textContent = await invoke("update_card", { cardText: cardText, cardId: cardId });
+  greetMsgEl.textContent = await invoke("update_card", { cardText: cardText, cardId: parseInt(cardId) });
 }
 
 window.addEventListener("DOMContentLoaded", () => {

@@ -11,7 +11,6 @@ fn greet(name: &str) -> String {
 }
 #[tauri::command]
 fn update_card(card_text: &str, card_id: u32) -> String {
-    println!("update_card_log");
     format!(
         "Hello, from update_card! card_text={}, card_id={}",
         card_text, card_id
