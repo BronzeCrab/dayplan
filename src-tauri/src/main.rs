@@ -1,9 +1,8 @@
 // Prevents additional console window on Windows in release, DO NOT REMOVE!!
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
-use rusqlite::{Connection, Result};
+use rusqlite::{Connection, Error, Result};
 mod models;
 use models::Task;
-
 
 // Learn more about Tauri commands at https://tauri.app/v1/guides/features/command
 #[tauri::command]
@@ -11,12 +10,15 @@ fn greet(name: &str) -> String {
     format!("Hello, {}! You've been greeted from Rust!", name)
 }
 #[tauri::command]
-fn update_card(card_text: &str) -> String {
+fn update_card(card_text: &str, card_id: u32) -> String {
     println!("update_card_log");
-    format!("Hello, from update_card! card_text={}", card_text)
+    format!(
+        "Hello, from update_card! card_text={}, card_id={}",
+        card_text, card_id
+    )
 }
 
-fn try_to_create_db(conn: &Connection) -> Result<()> {
+fn try_to_create_db(conn: &Connection) -> Result<(), Error> {
     conn.execute(
         "CREATE TABLE task (
             id    INTEGER PRIMARY KEY,
@@ -31,8 +33,12 @@ fn try_to_create_db(conn: &Connection) -> Result<()> {
 fn main() {
     let conn = Connection::open("tasks.db").unwrap();
 
-    let res = try_to_create_db(&conn);
-    println!("create db res: {:?}", res);
+    let create_db_res = try_to_create_db(&conn);
+
+    match create_db_res {
+        Ok(res) => res,
+        Err(error) => println!("create db res: {:?}", error),
+    };
 
     let task = Task {
         id: 0,
