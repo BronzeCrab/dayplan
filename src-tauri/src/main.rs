@@ -3,6 +3,7 @@
 use rusqlite::{Connection, Error, Result};
 mod models;
 use models::Task;
+use serde_json::{Value, json};
 
 const DB_PATH: &str = "tasks.db";
 
@@ -42,6 +43,23 @@ fn try_to_create_db(conn: &Connection) -> Result<(), Error> {
     Ok(())
 }
 
+#[tauri::command]
+fn get_cards(conn: &Connection) -> Vec<Task> {
+    let mut stmt = conn.prepare("SELECT id, text, status FROM task").unwrap();
+    let task_iter = stmt.query_map([], |row| {
+        Ok(Task {
+            id: row.get(0)?,
+            text: row.get(1)?,
+            status: row.get(2)?,
+        })
+    }).unwrap();
+    let mut tasks: Vec<Task> = Vec::new();
+    for task in task_iter {
+        tasks.push(task.unwrap());
+    }
+    tasks
+}
+
 fn main() {
     let conn = Connection::open(DB_PATH).unwrap();
 
@@ -51,6 +69,8 @@ fn main() {
         Ok(res) => res,
         Err(error) => println!("create db res: {:?}", error),
     };
+
+    println!("{:?}", json!(get_cards(&conn)));
 
     // let task = Task {
     //     id: 0,
@@ -62,21 +82,6 @@ fn main() {
     //     (&task.text, &task.status),
     // )
     // .unwrap();
-
-    let mut stmt = conn.prepare("SELECT id, text, status FROM task").unwrap();
-    let task_iter = stmt
-        .query_map([], |row| {
-            Ok(Task {
-                id: row.get(0)?,
-                text: row.get(1)?,
-                status: row.get(2)?,
-            })
-        })
-        .unwrap();
-
-    for task in task_iter {
-        println!("Found task {:?}", task.unwrap());
-    }
 
     tauri::Builder::default()
         .invoke_handler(tauri::generate_handler![greet, update_card])
