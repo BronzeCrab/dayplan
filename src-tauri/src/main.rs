@@ -4,13 +4,26 @@ use rusqlite::{Connection, Error, Result};
 mod models;
 use models::Task;
 
+const DB_PATH: &str = "tasks.db";
+
 // Learn more about Tauri commands at https://tauri.app/v1/guides/features/command
 #[tauri::command]
 fn greet(name: &str) -> String {
     format!("Hello, {}! You've been greeted from Rust!", name)
 }
+
 #[tauri::command]
 fn update_card(card_text: &str, card_id: u32) -> String {
+    let conn = Connection::open(DB_PATH).unwrap();
+    conn.execute(
+        &format!(
+            "UPDATE task
+        SET text = '{card_text}'
+        WHERE id = {card_id};"
+        ),
+        (),
+    )
+    .unwrap();
     format!(
         "Hello, from update_card! card_text={}, card_id={}",
         card_text, card_id
@@ -24,13 +37,13 @@ fn try_to_create_db(conn: &Connection) -> Result<(), Error> {
             text  TEXT NOT NULL,
             status  TEXT NOT NULL
         )",
-        (), // empty list of parameters.
+        (),
     )?;
     Ok(())
 }
 
 fn main() {
-    let conn = Connection::open("tasks.db").unwrap();
+    let conn = Connection::open(DB_PATH).unwrap();
 
     let create_db_res = try_to_create_db(&conn);
 
@@ -39,16 +52,16 @@ fn main() {
         Err(error) => println!("create db res: {:?}", error),
     };
 
-    let task = Task {
-        id: 0,
-        text: "Steven".to_string(),
-        status: "lol".to_string(),
-    };
-    conn.execute(
-        "INSERT INTO task (text, status) VALUES (?1, ?2)",
-        (&task.text, &task.status),
-    )
-    .unwrap();
+    // let task = Task {
+    //     id: 0,
+    //     text: "Steven".to_string(),
+    //     status: "lol".to_string(),
+    // };
+    // conn.execute(
+    //     "INSERT INTO task (text, status) VALUES (?1, ?2)",
+    //     (&task.text, &task.status),
+    // )
+    // .unwrap();
 
     let mut stmt = conn.prepare("SELECT id, text, status FROM task").unwrap();
     let task_iter = stmt

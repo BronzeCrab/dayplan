@@ -42,3 +42,5 @@ https://developer.mozilla.org/en-US/docs/Web/API/HTMLElement/drag_event
 https://www.chartjs.org/docs/latest/getting-started/
 
 https://github.com/rusqlite/rusqlite
+
+https://doc.rust-lang.org/book/ch09-02-recoverable-errors-with-result.html
