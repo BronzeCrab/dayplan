@@ -13,6 +13,9 @@ async function updateCard(cardText, cardId) {
 }
 
 window.addEventListener("DOMContentLoaded", () => {
+  invoke('get_cards').then((message) => console.log(message));
+
+
   greetInputEl = document.querySelector("#greet-input");
   greetMsgEl = document.querySelector("#greet-msg");
   document.querySelector("#greet-form").addEventListener("submit", (e) => {
