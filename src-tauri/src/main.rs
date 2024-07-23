@@ -3,7 +3,6 @@
 use rusqlite::{Connection, Error, Result};
 mod models;
 use models::Task;
-use serde_json::{json, Value};
 
 const DB_PATH: &str = "tasks.db";
 
@@ -28,6 +27,20 @@ fn update_card(card_text: &str, card_id: u32) -> String {
     format!(
         "Hello, from update_card! card_text={}, card_id={}",
         card_text, card_id
+    )
+}
+
+#[tauri::command]
+fn create_card(card_text: &str, card_status: &str) -> String {
+    let conn = Connection::open(DB_PATH).unwrap();
+    conn.execute(
+        &format!("INSERT INTO task (text, status) VALUES ('{card_text}', '{card_status}')",),
+        (),
+    )
+    .unwrap();
+    format!(
+        "Hello, from create_card! card_text={}, card_status={}",
+        card_text, card_status
     )
 }
 

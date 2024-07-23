@@ -13,7 +13,12 @@ async function updateCard(cardText, cardId) {
 }
 
 window.addEventListener("DOMContentLoaded", () => {
-  invoke('get_cards').then((message) => console.log(message));
+  invoke('get_cards').then((message) => { 
+    for (let i = 0; i < message.length; i++) {
+      const elem = document.getElementById(message[i].id);
+      elem.textContent = message[i].text;
+    }
+   });
 
 
   greetInputEl = document.querySelector("#greet-input");
