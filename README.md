@@ -44,3 +44,5 @@ https://www.chartjs.org/docs/latest/getting-started/
 https://github.com/rusqlite/rusqlite
 
 https://doc.rust-lang.org/book/ch09-02-recoverable-errors-with-result.html
+
+https://www.w3schools.com/howto/howto_css_modals.asp

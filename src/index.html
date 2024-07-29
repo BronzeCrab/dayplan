@@ -18,7 +18,17 @@
 
     <p id="greet-msg"></p>
 
+    <div id="myModal" class="modal">
+      <div class="modal-content">
+        <span class="close">&times;</span>
+        <p>Some text in the Modal..</p>
+        <input type="text" id="taskCreateInput" name="name" required minlength="4" maxlength="8" size="10" />
+        <button id="taskCreateBtn">Create the card!</button>
+      </div>
+    </div>
+
     <div class="container" style="border: solid red; width:500px;">
+      <button id="openModalBtn">Open Modal</button>
       <div id="1" class="draggable" draggable="true" contenteditable="true" style="border: solid green; width:100px;">this is not going to show</div>
       <div id="2" class="draggable" draggable="true" contenteditable="true" style="border: solid green; width:100px;">CSS is fun</div>
     </div>

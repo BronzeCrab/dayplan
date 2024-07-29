@@ -98,7 +98,12 @@ fn main() {
     // .unwrap();
 
     tauri::Builder::default()
-        .invoke_handler(tauri::generate_handler![greet, update_card, get_cards])
+        .invoke_handler(tauri::generate_handler![
+            greet,
+            update_card,
+            get_cards,
+            create_card
+        ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }
