@@ -32,7 +32,7 @@ fn update_card(card_text: &str, card_id: u32) -> String {
 }
 
 #[tauri::command]
-fn create_card(card_text: &str, card_status: &str) -> Task {
+fn create_card(card_text: String, card_status: String) -> Task {
     let conn = Connection::open(DB_PATH).unwrap();
     let mut stmt = conn.prepare(
         &format!(
@@ -48,8 +48,8 @@ fn create_card(card_text: &str, card_status: &str) -> Task {
     );
     Task {
         id: res[0],
-        text: card_text.to_string(),
-        status: card_status.to_string(),
+        text: card_text,
+        status: card_status,
     }
 }
 

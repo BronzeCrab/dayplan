@@ -14,7 +14,34 @@ async function updateCard(cardText, cardId) {
 
 async function createCard(cardText) {
   let card = await invoke("create_card", { cardText: cardText, cardStatus: "todo" });
-  console.log(card);
+  const newDiv = document.createElement("div");
+  newDiv.setAttribute("id", card.id);
+  newDiv.setAttribute("class", "draggable");
+  newDiv.setAttribute("draggable", "true");
+  newDiv.setAttribute("contenteditable", true);
+  newDiv.innerHTML = card.text;
+  newDiv.setAttribute("style", "border: solid magenta; width:100px;");
+
+  addDraggableEventListeners(newDiv);
+
+  let containers = document.getElementsByClassName("container");
+  for (let i = 0; i < containers.length; i++) {
+    containers[i].appendChild(newDiv);
+    break
+  }
+}
+
+function addDraggableEventListeners(draggable) {
+  draggable.addEventListener("dragstart", function(event) {
+    draggable.classList.add("dragging");
+    event.dataTransfer.setData('text/html', null);
+  });
+  draggable.addEventListener("dragend", function() {
+    draggable.classList.remove("dragging");
+  });
+  draggable.addEventListener("input", function() {
+    updateCard(draggable.textContent, draggable.id);
+  });
 }
 
 window.addEventListener("DOMContentLoaded", () => {
@@ -66,16 +93,7 @@ window.addEventListener("DOMContentLoaded", () => {
 
   const draggables = document.querySelectorAll(".draggable");
   draggables.forEach(draggable => {
-    draggable.addEventListener("dragstart", function(event) {
-      draggable.classList.add("dragging");
-      event.dataTransfer.setData('text/html', null);
-    });
-    draggable.addEventListener("dragend", function() {
-      draggable.classList.remove("dragging");
-    });
-    draggable.addEventListener("input", function() {
-      updateCard(draggable.textContent, draggable.id);
-    });
+    addDraggableEventListeners(draggable);
   });
 
   const containers = document.querySelectorAll(".container");
