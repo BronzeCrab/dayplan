@@ -2720,6 +2720,7 @@ dependencies = [
 name = "tauri-app"
 version = "0.0.0"
 dependencies = [
+ "fallible-iterator",
  "rusqlite",
  "serde",
  "serde_json",

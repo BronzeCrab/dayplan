@@ -2,6 +2,7 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 use rusqlite::{Connection, Error, Result};
 mod models;
+use fallible_iterator::FallibleIterator;
 use models::Task;
 
 const DB_PATH: &str = "tasks.db";
@@ -14,7 +15,7 @@ fn greet(name: &str) -> String {
 
 #[tauri::command]
 fn update_card(card_text: &str, card_id: u32) -> String {
-    let conn = Connection::open(DB_PATH).unwrap();
+    let conn: Connection = Connection::open(DB_PATH).unwrap();
     conn.execute(
         &format!(
             "UPDATE task
@@ -33,14 +34,17 @@ fn update_card(card_text: &str, card_id: u32) -> String {
 #[tauri::command]
 fn create_card(card_text: &str, card_status: &str) -> String {
     let conn = Connection::open(DB_PATH).unwrap();
-    conn.execute(
-        &format!("INSERT INTO task (text, status) VALUES ('{card_text}', '{card_status}')",),
-        (),
-    )
-    .unwrap();
+    let mut stmt = conn.prepare(
+        &format!(
+            "INSERT INTO task (text, status) VALUES ('{card_text}', '{card_status}') RETURNING task.id")
+        ).unwrap();
+
+    let rows = stmt.query([]).unwrap();
+    let res: Vec<usize> = rows.map(|r| r.get(0)).collect().unwrap();
+
     format!(
-        "Hello, from create_card! card_text={}, card_status={}",
-        card_text, card_status
+        "Hello, from create_card! card_text={}, card_status={}, res={}",
+        card_text, card_status, res[0]
     )
 }
 
