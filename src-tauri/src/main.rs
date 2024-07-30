@@ -32,7 +32,7 @@ fn update_card(card_text: &str, card_id: u32) -> String {
 }
 
 #[tauri::command]
-fn create_card(card_text: &str, card_status: &str) -> String {
+fn create_card(card_text: &str, card_status: &str) -> Task {
     let conn = Connection::open(DB_PATH).unwrap();
     let mut stmt = conn.prepare(
         &format!(
@@ -40,12 +40,17 @@ fn create_card(card_text: &str, card_status: &str) -> String {
         ).unwrap();
 
     let rows = stmt.query([]).unwrap();
-    let res: Vec<usize> = rows.map(|r| r.get(0)).collect().unwrap();
+    let res: Vec<u32> = rows.map(|r| r.get(0)).collect().unwrap();
 
-    format!(
+    println!(
         "Hello, from create_card! card_text={}, card_status={}, res={}",
         card_text, card_status, res[0]
-    )
+    );
+    Task {
+        id: res[0],
+        text: card_text.to_string(),
+        status: card_status.to_string(),
+    }
 }
 
 fn try_to_create_db(conn: &Connection) -> Result<(), Error> {

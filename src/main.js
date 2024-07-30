@@ -13,7 +13,8 @@ async function updateCard(cardText, cardId) {
 }
 
 async function createCard(cardText) {
-  greetMsgEl.textContent = await invoke("create_card", { cardText: cardText, cardStatus: "todo" });
+  let card = await invoke("create_card", { cardText: cardText, cardStatus: "todo" });
+  console.log(card);
 }
 
 window.addEventListener("DOMContentLoaded", () => {
