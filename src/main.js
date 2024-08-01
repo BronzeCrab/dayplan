@@ -1,15 +1,9 @@
 const { invoke } = window.__TAURI__.tauri;
 
-let greetInputEl;
-let greetMsgEl;
-
-async function greet() {
-  // Learn more about Tauri commands at https://tauri.app/v1/guides/features/command
-  greetMsgEl.textContent = await invoke("greet", { name: greetInputEl.value });
-}
+let debugMsgEl;
 
 async function updateCard(cardText, cardId) {
-  greetMsgEl.textContent = await invoke("update_card", { cardText: cardText, cardId: parseInt(cardId) });
+  debugMsgEl.textContent = await invoke("update_card", { cardText: cardText, cardId: parseInt(cardId) });
 }
 
 async function createCard(cardText) {
@@ -25,6 +19,7 @@ async function createCard(cardText) {
   addDraggableEventListeners(newDiv);
 
   let containers = document.getElementsByClassName("container");
+  // TODO: append graggable div only to right container!
   for (let i = 0; i < containers.length; i++) {
     containers[i].appendChild(newDiv);
     break
@@ -74,30 +69,7 @@ function handleModal() {
   } 
 }
 
-function addDraggableEventListeners(draggable) {
-  draggable.addEventListener("dragstart", function(event) {
-    draggable.classList.add("dragging");
-    event.dataTransfer.setData('text/html', null);
-  });
-  draggable.addEventListener("dragend", function() {
-    draggable.classList.remove("dragging");
-  });
-  draggable.addEventListener("input", function() {
-    updateCard(draggable.textContent, draggable.id);
-  });
-}
-
-window.addEventListener("DOMContentLoaded", () => {
-  initGetCards()
-  handleModal()
-
-  greetInputEl = document.querySelector("#greet-input");
-  greetMsgEl = document.querySelector("#greet-msg");
-  document.querySelector("#greet-form").addEventListener("submit", (e) => {
-    e.preventDefault();
-    greet();
-  });
-
+function handleDragging() {
   const draggables = document.querySelectorAll(".draggable");
   draggables.forEach(draggable => {
     addDraggableEventListeners(draggable);
@@ -117,6 +89,29 @@ window.addEventListener("DOMContentLoaded", () => {
       container.appendChild(draggedElement);
     });
   });
+}
+
+function addDraggableEventListeners(draggable) {
+  draggable.addEventListener("dragstart", function(event) {
+    draggable.classList.add("dragging");
+    event.dataTransfer.setData('text/html', null);
+  });
+  draggable.addEventListener("dragend", function() {
+    draggable.classList.remove("dragging");
+  });
+  draggable.addEventListener("input", function() {
+    updateCard(draggable.textContent, draggable.id);
+  });
+}
+
+window.addEventListener("DOMContentLoaded", () => {
+  // TODO: remove it later:
+  debugMsgEl = document.querySelector("#debug-msg");
+
+  initGetCards();
+  handleModal();
+  handleDragging();
+
 });
 
 
