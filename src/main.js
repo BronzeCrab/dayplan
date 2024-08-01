@@ -31,30 +31,19 @@ async function createCard(cardText) {
   }
 }
 
-function addDraggableEventListeners(draggable) {
-  draggable.addEventListener("dragstart", function(event) {
-    draggable.classList.add("dragging");
-    event.dataTransfer.setData('text/html', null);
-  });
-  draggable.addEventListener("dragend", function() {
-    draggable.classList.remove("dragging");
-  });
-  draggable.addEventListener("input", function() {
-    updateCard(draggable.textContent, draggable.id);
-  });
-}
-
-window.addEventListener("DOMContentLoaded", () => {
+function initGetCards() {
   invoke('get_cards').then((cards) => { 
+    let graggable_elems = document.getElementsByClassName("draggable");
     for (let i = 0; i < cards.length; i++) {
-      console.log(cards[i]);
-      const elem = document.getElementById(cards[i].id);
-      if (elem !== null) {
-        elem.textContent = cards[i].text;
+      const graggableElem = graggable_elems[cards[i].id - 1];
+      if (graggableElem !== undefined) {
+        graggableElem.textContent = cards[i].text;
       }
     }
    });
+}
 
+function handleModal() {
   // Get the modal
   var modal = document.getElementById("myModal");
   // Get the button that opens the modal
@@ -82,7 +71,25 @@ window.addEventListener("DOMContentLoaded", () => {
     if (event.target == modal) {
       modal.style.display = "none";
     }
-  }
+  } 
+}
+
+function addDraggableEventListeners(draggable) {
+  draggable.addEventListener("dragstart", function(event) {
+    draggable.classList.add("dragging");
+    event.dataTransfer.setData('text/html', null);
+  });
+  draggable.addEventListener("dragend", function() {
+    draggable.classList.remove("dragging");
+  });
+  draggable.addEventListener("input", function() {
+    updateCard(draggable.textContent, draggable.id);
+  });
+}
+
+window.addEventListener("DOMContentLoaded", () => {
+  initGetCards()
+  handleModal()
 
   greetInputEl = document.querySelector("#greet-input");
   greetMsgEl = document.querySelector("#greet-msg");
