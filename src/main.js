@@ -53,16 +53,18 @@ function initGetCards() {
 function handleModal() {
   // Get the modal
   var modal = document.getElementById("myModal");
-  // Get the button that opens the modal
-  var openModalBtn = document.getElementById("openModalBtn");
+  // Get all the buttons that opens the modal
+  var openModalBtns = document.getElementsByClassName("openModalBtn");
   // Get the button that creates the task in modal
   var taskCreateBtn = document.getElementById("taskCreateBtn");
   // Get the <span> element that closes the modal
   var span = document.getElementsByClassName("close")[0];
 
-  // When the user clicks on this button, open the modal
-  openModalBtn.onclick = function() {
-    modal.style.display = "block";
+  // When the user clicks on this buttons, open the modal
+  for (let i = 0; i < openModalBtns.length; i++) {
+    openModalBtns[i].onclick = function() {
+      modal.style.display = "block";
+    }
   }
   // When the user clicks on this button, create task in db:
   taskCreateBtn.onclick = function() {
