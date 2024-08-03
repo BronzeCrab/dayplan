@@ -2,6 +2,7 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 use rusqlite::{Connection, Error, Result};
 mod models;
+use chrono::offset::Local;
 use fallible_iterator::FallibleIterator;
 use models::Task;
 
@@ -71,9 +72,11 @@ fn create_card(card_text: String, card_status: String, container_id: u32) -> Tas
 
 fn create_init_containers(conn: &Connection) -> Result<(), Error> {
     let statuses = &["todo", "doing", "done"];
+    // YYYY-MM-DD
+    let today_date = Local::now().to_string();
     for status in statuses {
         conn.execute(
-            &format!("INSERT INTO container (status) VALUES ('{status}');"),
+            &format!("INSERT INTO container (status, date) VALUES ('{status}', '{today_date}');"),
             (),
         )?;
     }
@@ -84,7 +87,8 @@ fn try_to_create_db(conn: &Connection) -> Result<(), Error> {
     conn.execute(
         "CREATE TABLE container (
             id    INTEGER PRIMARY KEY,
-            status  TEXT NOT NULL
+            status  TEXT NOT NULL,
+            date DATE NOT NULL
         );
         ",
         (),
@@ -130,7 +134,10 @@ fn main() {
     match try_to_create_db(&conn) {
         Ok(_res) => match create_init_containers(&conn) {
             Ok(_res) => println!("INFO: ok creation of tables and init containers."),
-            Err(error) => println!("ERROR: ok creation of tables, but error init containers: {:?}", error),
+            Err(error) => println!(
+                "ERROR: ok creation of tables, but error init containers: {:?}",
+                error
+            ),
         },
         Err(error) => println!("ERROR: create db res: {:?}", error),
     };
