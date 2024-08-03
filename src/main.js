@@ -2,8 +2,10 @@ const { invoke } = window.__TAURI__.tauri;
 
 let debugMsgEl;
 
-async function updateCard(cardText, cardId) {
-  debugMsgEl.textContent = await invoke("update_card", { cardText: cardText, cardId: parseInt(cardId) });
+async function updateCard(cardId, cardText, newContainerId) {
+  debugMsgEl.textContent = await invoke(
+    "update_card", 
+    {cardId: parseInt(cardId), cardText: cardText, newContainerId: parseInt(newContainerId) });
 }
 
 async function deleteCard(cardId) {
@@ -120,6 +122,8 @@ function handleDragging() {
       const draggedElement = document.querySelector(".dragging");
       draggedElement.parentNode.removeChild(draggedElement);
       container.appendChild(draggedElement);
+      // Then we need to change container_id:
+      updateCard(draggedElement.id, null, container.id);
     });
   });
 }
@@ -133,7 +137,7 @@ function addDraggableEventListeners(draggable) {
     draggable.classList.remove("dragging");
   });
   draggable.addEventListener("input", function() {
-    updateCard(draggable.textContent, draggable.id);
+    updateCard(draggable.id, draggable.textContent, null);
   });
 }
 

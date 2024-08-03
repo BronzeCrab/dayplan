@@ -14,21 +14,19 @@ fn greet(name: &str) -> String {
 }
 
 #[tauri::command]
-fn update_card(card_text: &str, card_id: u32) -> String {
+fn update_card(card_id: u32, card_text: Option<&str>, new_container_id: Option<u32>) -> String {
     let conn: Connection = Connection::open(DB_PATH).unwrap();
-    conn.execute(
-        &format!(
-            "UPDATE task
-        SET text = '{card_text}'
-        WHERE id = {card_id};"
-        ),
-        (),
-    )
-    .unwrap();
-    format!(
-        "Hello, from update_card! card_text={}, card_id={}",
-        card_text, card_id
-    )
+
+    let sql_stmnt: &str = if card_text.is_some() {
+        let txt: &str = card_text.unwrap();
+        &format!("UPDATE task SET text = '{txt}' WHERE id = {card_id};")
+    } else {
+        let cont_id: u32 = new_container_id.unwrap();
+        &format!("UPDATE task SET container_id = {cont_id} WHERE id = {card_id};")
+    };
+
+    conn.execute(sql_stmnt, ()).unwrap();
+    format!("Hello, from update_card! card_id={}", card_id)
 }
 
 #[tauri::command]
@@ -71,8 +69,7 @@ fn create_card(card_text: String, card_status: String, container_id: u32) -> Tas
 }
 
 fn create_init_containers(conn: &Connection) -> Result<(), Error> {
-    let statuses = &["todo", "doing", "done"];
-    // YYYY-MM-DD
+    let statuses = ["todo", "doing", "done"];
     let today_date = Local::now().to_string();
     for status in statuses {
         conn.execute(
