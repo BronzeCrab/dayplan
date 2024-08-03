@@ -46,7 +46,8 @@ fn delete_card(card_id: u32) -> String {
 }
 
 #[tauri::command]
-fn create_card(card_text: String, card_status: String) -> Task {
+fn create_card(card_text: String, card_status: String, container_id: u32) -> Task {
+    println!("get this container_id={}", container_id);
     let conn = Connection::open(DB_PATH).unwrap();
     let mut stmt = conn.prepare(
         &format!(

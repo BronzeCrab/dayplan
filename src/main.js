@@ -10,8 +10,9 @@ async function deleteCard(cardId) {
   debugMsgEl.textContent = await invoke("delete_card", { cardId: parseInt(cardId) });
 }
 
-async function createCard(cardText) {
-  let card = await invoke("create_card", { cardText: cardText, cardStatus: "todo" });
+async function createCard(cardText, containerId) {
+  containerId = parseInt(containerId);
+  let card = await invoke("create_card", { cardText: cardText, cardStatus: "todo", containerId: containerId });
   const newDiv = document.createElement("div");
   newDiv.setAttribute("id", card.id);
   newDiv.setAttribute("class", "draggable");
@@ -31,10 +32,11 @@ async function createCard(cardText) {
   addDraggableEventListeners(newDiv);
 
   let containers = document.getElementsByClassName("container");
-  // TODO: append graggable div only to right container!
   for (let i = 0; i < containers.length; i++) {
-    containers[i].appendChild(newDiv);
-    break
+    if (parseInt(containers[i].id) === containerId) {
+      containers[i].appendChild(newDiv);
+      break
+    }
   }
 }
 
@@ -64,12 +66,13 @@ function handleModal() {
   for (let i = 0; i < openModalBtns.length; i++) {
     openModalBtns[i].onclick = function() {
       modal.style.display = "block";
+      modal.dataset.containerId = openModalBtns[i].parentNode.id;
     }
   }
   // When the user clicks on this button, create task in db:
   taskCreateBtn.onclick = function() {
     var taskCreateInput = document.getElementById("taskCreateInput");
-    createCard(taskCreateInput.value);
+    createCard(taskCreateInput.value, modal.dataset.containerId);
   }
   // When the user clicks on <span> (x), close the modal
   span.onclick = function() {
