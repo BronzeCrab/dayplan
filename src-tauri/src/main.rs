@@ -47,19 +47,19 @@ fn delete_card(card_id: u32) -> String {
 
 #[tauri::command]
 fn create_card(card_text: String, card_status: String, container_id: u32) -> Task {
-    println!("get this container_id={}", container_id);
     let conn = Connection::open(DB_PATH).unwrap();
     let mut stmt = conn.prepare(
         &format!(
-            "INSERT INTO task (text, status) VALUES ('{card_text}', '{card_status}') RETURNING task.id")
+            "INSERT INTO task (text, status, container_id) VALUES
+            ('{card_text}', '{card_status}', '{container_id}') RETURNING task.id")
         ).unwrap();
 
     let rows = stmt.query([]).unwrap();
     let res: Vec<u32> = rows.map(|r| r.get(0)).collect().unwrap();
 
     println!(
-        "Hello, from create_card! card_text={}, card_status={}, res={}",
-        card_text, card_status, res[0]
+        "Hello, from create_card! card_text={}, card_status={}, container_id={}, res={}",
+        card_text, card_status, container_id, res[0]
     );
     Task {
         id: res[0],
@@ -70,11 +70,22 @@ fn create_card(card_text: String, card_status: String, container_id: u32) -> Tas
 
 fn try_to_create_db(conn: &Connection) -> Result<(), Error> {
     conn.execute(
+        "CREATE TABLE container (
+            id    INTEGER PRIMARY KEY,
+            status  TEXT NOT NULL
+        );
+        ",
+        (),
+    )?;
+    conn.execute(
         "CREATE TABLE task (
             id    INTEGER PRIMARY KEY,
             text  TEXT NOT NULL,
-            status  TEXT NOT NULL
-        )",
+            status  TEXT NOT NULL,
+            container_id INT,
+            FOREIGN KEY (container_id) REFERENCES container
+        );
+        ",
         (),
     )?;
     Ok(())
