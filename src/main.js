@@ -13,6 +13,7 @@ async function deleteCard(cardId) {
 async function createCard(cardText, containerId) {
   containerId = parseInt(containerId);
   let card = await invoke("create_card", { cardText: cardText, cardStatus: "todo", containerId: containerId });
+  assert(card.containerId === containerId, "error card.containerId != containerId");
   const newDiv = document.createElement("div");
   newDiv.setAttribute("id", card.id);
   newDiv.setAttribute("class", "draggable");

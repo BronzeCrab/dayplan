@@ -7,7 +7,6 @@ use models::Task;
 
 const DB_PATH: &str = "tasks.db";
 
-// Learn more about Tauri commands at https://tauri.app/v1/guides/features/command
 #[tauri::command]
 fn greet(name: &str) -> String {
     format!("Hello, {}! You've been greeted from Rust!", name)
@@ -48,11 +47,12 @@ fn delete_card(card_id: u32) -> String {
 #[tauri::command]
 fn create_card(card_text: String, card_status: String, container_id: u32) -> Task {
     let conn = Connection::open(DB_PATH).unwrap();
-    let mut stmt = conn.prepare(
-        &format!(
+    let mut stmt = conn
+        .prepare(&format!(
             "INSERT INTO task (text, status, container_id) VALUES
-            ('{card_text}', '{card_status}', '{container_id}') RETURNING task.id")
-        ).unwrap();
+            ('{card_text}', '{card_status}', '{container_id}') RETURNING task.id"
+        ))
+        .unwrap();
 
     let rows = stmt.query([]).unwrap();
     let res: Vec<u32> = rows.map(|r| r.get(0)).collect().unwrap();
@@ -65,7 +65,19 @@ fn create_card(card_text: String, card_status: String, container_id: u32) -> Tas
         id: res[0],
         text: card_text,
         status: card_status,
+        container_id: container_id,
     }
+}
+
+fn create_init_containers(conn: &Connection) -> Result<(), Error> {
+    let statuses = &["todo", "doing", "done"];
+    for status in statuses {
+        conn.execute(
+            &format!("INSERT INTO container (status) VALUES ('{status}');"),
+            (),
+        )?;
+    }
+    Ok(())
 }
 
 fn try_to_create_db(conn: &Connection) -> Result<(), Error> {
@@ -101,6 +113,7 @@ fn get_cards() -> Vec<Task> {
                 id: row.get(0)?,
                 text: row.get(1)?,
                 status: row.get(2)?,
+                container_id: row.get(3)?,
             })
         })
         .unwrap();
@@ -114,11 +127,12 @@ fn get_cards() -> Vec<Task> {
 fn main() {
     let conn = Connection::open(DB_PATH).unwrap();
 
-    let create_db_res = try_to_create_db(&conn);
-
-    match create_db_res {
-        Ok(res) => res,
-        Err(error) => println!("create db res: {:?}", error),
+    match try_to_create_db(&conn) {
+        Ok(_res) => match create_init_containers(&conn) {
+            Ok(_res) => println!("INFO: ok creation of tables and init containers."),
+            Err(error) => println!("ERROR: ok creation of tables, but error init containers: {:?}", error),
+        },
+        Err(error) => println!("ERROR: create db res: {:?}", error),
     };
 
     tauri::Builder::default()
