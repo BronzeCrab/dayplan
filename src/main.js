@@ -6,6 +6,10 @@ async function updateCard(cardText, cardId) {
   debugMsgEl.textContent = await invoke("update_card", { cardText: cardText, cardId: parseInt(cardId) });
 }
 
+async function deleteCard(cardId) {
+  debugMsgEl.textContent = await invoke("delete_card", { cardId: parseInt(cardId) });
+}
+
 async function createCard(cardText) {
   let card = await invoke("create_card", { cardText: cardText, cardStatus: "todo" });
   const newDiv = document.createElement("div");
@@ -13,7 +17,15 @@ async function createCard(cardText) {
   newDiv.setAttribute("class", "draggable");
   newDiv.setAttribute("draggable", "true");
   newDiv.setAttribute("contenteditable", true);
-  newDiv.innerHTML = card.text;
+
+  // Creating delete btn for this new card:
+  const newDelTaskBtn = document.createElement("button");
+  newDelTaskBtn.setAttribute("class", "delTaskBtn");
+  newDelTaskBtn.innerHTML = "Delete task";
+  addDeleteCardOnclick(newDelTaskBtn);
+  newDiv.innerHTML = card.text
+  newDiv.appendChild(newDelTaskBtn);
+
   newDiv.setAttribute("style", "border: solid magenta; width:100px;");
 
   addDraggableEventListeners(newDiv);
@@ -69,6 +81,21 @@ function handleModal() {
   } 
 }
 
+function handleTaskDelete() {
+  const delTaskBtns = document.querySelectorAll(".delTaskBtn");
+  delTaskBtns.forEach(delTaskBtn => {
+    addDeleteCardOnclick(delTaskBtn);
+  });
+}
+
+function addDeleteCardOnclick(delTaskBtn) {
+  delTaskBtn.onclick = function() {
+    let graggable = delTaskBtn.parentNode;
+    deleteCard(graggable.id);
+    graggable.remove();
+  }
+}
+
 function handleDragging() {
   const draggables = document.querySelectorAll(".draggable");
   draggables.forEach(draggable => {
@@ -109,6 +136,7 @@ window.addEventListener("DOMContentLoaded", () => {
   debugMsgEl = document.querySelector("#debug-msg");
 
   initGetCards();
+  handleTaskDelete();
   handleModal();
   handleDragging();
 

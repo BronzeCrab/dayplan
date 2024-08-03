@@ -32,6 +32,20 @@ fn update_card(card_text: &str, card_id: u32) -> String {
 }
 
 #[tauri::command]
+fn delete_card(card_id: u32) -> String {
+    let conn: Connection = Connection::open(DB_PATH).unwrap();
+    conn.execute(
+        &format!(
+            "DELETE from task
+            WHERE id = {card_id};"
+        ),
+        (),
+    )
+    .unwrap();
+    format!("Hello, from delete_card! card_id={}", card_id)
+}
+
+#[tauri::command]
 fn create_card(card_text: String, card_status: String) -> Task {
     let conn = Connection::open(DB_PATH).unwrap();
     let mut stmt = conn.prepare(
@@ -95,23 +109,13 @@ fn main() {
         Err(error) => println!("create db res: {:?}", error),
     };
 
-    // let task = Task {
-    //     id: 0,
-    //     text: "Steven".to_string(),
-    //     status: "lol".to_string(),
-    // };
-    // conn.execute(
-    //     "INSERT INTO task (text, status) VALUES (?1, ?2)",
-    //     (&task.text, &task.status),
-    // )
-    // .unwrap();
-
     tauri::Builder::default()
         .invoke_handler(tauri::generate_handler![
             greet,
             update_card,
             get_cards,
-            create_card
+            create_card,
+            delete_card,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
