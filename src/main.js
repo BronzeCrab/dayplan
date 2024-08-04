@@ -14,43 +14,53 @@ async function deleteCard(cardId) {
 
 async function createCard(cardText, containerId) {
   containerId = parseInt(containerId);
-  let card = await invoke("create_card", { cardText: cardText, cardStatus: "todo", containerId: containerId });
-  console.assert(card.containerId === containerId, "error card.containerId != containerId");
+  let card = await invoke(
+    "create_card", 
+    { cardText: cardText, cardStatus: "todo", containerId: containerId }
+  );
+
+  console.assert(card.container_id === containerId, "error card.containerId != containerId");
+
+  let newDiv = createNewDraggableDiv(card);
+  let containers = document.getElementsByClassName("container");
+  appendDraggableToContainer(newDiv, containerId, containers);
+}
+
+function createNewDraggableDiv(card) {
   const newDiv = document.createElement("div");
   newDiv.setAttribute("id", card.id);
   newDiv.setAttribute("class", "draggable");
   newDiv.setAttribute("draggable", "true");
   newDiv.setAttribute("contenteditable", true);
+  newDiv.setAttribute("style", "border: solid magenta; width:100px;");
+  newDiv.innerHTML = card.text
 
   // Creating delete btn for this new card:
   const newDelTaskBtn = document.createElement("button");
   newDelTaskBtn.setAttribute("class", "delTaskBtn");
   newDelTaskBtn.innerHTML = "Delete task";
   addDeleteCardOnclick(newDelTaskBtn);
-  newDiv.innerHTML = card.text
   newDiv.appendChild(newDelTaskBtn);
 
-  newDiv.setAttribute("style", "border: solid magenta; width:100px;");
-
   addDraggableEventListeners(newDiv);
+  return newDiv;
+}
 
-  let containers = document.getElementsByClassName("container");
-  for (let i = 0; i < containers.length; i++) {
-    if (parseInt(containers[i].id) === containerId) {
-      containers[i].appendChild(newDiv);
-      break
-    }
+function appendDraggableToContainer(newDiv, containerId, containers) {
+  let cardContainer = containers[containerId - 1];
+  if (cardContainer !== undefined) {
+    cardContainer.appendChild(newDiv);
   }
+  
 }
 
 function initGetCards() {
   invoke('get_cards').then((cards) => { 
-    let graggable_elems = document.getElementsByClassName("draggable");
+    let containers = document.getElementsByClassName("container");
     for (let i = 0; i < cards.length; i++) {
-      const graggableElem = graggable_elems[cards[i].id - 1];
-      if (graggableElem !== undefined) {
-        graggableElem.textContent = cards[i].text;
-      }
+      let newDiv = createNewDraggableDiv(cards[i]);
+      let containerId = cards[i].container_id;
+      appendDraggableToContainer(newDiv, containerId, containers);
     }
    });
 }
@@ -66,6 +76,8 @@ function handleModal() {
   var span = document.getElementsByClassName("close")[0];
 
   // When the user clicks on this buttons, open the modal
+  // user clicked on specific btn in specific container, so
+  // just set current param to modal.dataset:
   for (let i = 0; i < openModalBtns.length; i++) {
     openModalBtns[i].onclick = function() {
       modal.style.display = "block";
