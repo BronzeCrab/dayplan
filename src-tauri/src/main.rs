@@ -107,7 +107,9 @@ fn try_to_create_db(conn: &Connection) -> Result<(), Error> {
 #[tauri::command]
 fn get_cards() -> Vec<Task> {
     let conn = Connection::open(DB_PATH).unwrap();
-    let mut stmt = conn.prepare("SELECT id, text, status FROM task").unwrap();
+    let mut stmt = conn
+        .prepare("SELECT id, text, status, container_id FROM task")
+        .unwrap();
     let task_iter = stmt
         .query_map([], |row| {
             Ok(Task {
