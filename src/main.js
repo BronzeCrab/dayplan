@@ -51,7 +51,6 @@ function appendDraggableToContainer(newDiv, containerId, containers) {
   if (cardContainer !== undefined) {
     cardContainer.appendChild(newDiv);
   }
-  
 }
 
 function initGetCards() {
@@ -149,7 +148,8 @@ function addDraggableEventListeners(draggable) {
     draggable.classList.remove("dragging");
   });
   draggable.addEventListener("input", function() {
-    updateCard(draggable.id, draggable.textContent, null);
+    console.assert(draggable.childNodes[0].nodeType === Node.TEXT_NODE);
+    updateCard(draggable.id, draggable.childNodes[0].textContent, null);
   });
 }
 
