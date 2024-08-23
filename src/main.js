@@ -54,12 +54,16 @@ function appendDraggableToContainer(newDiv, containerId, containers) {
 }
 
 function initGetCards() {
-  invoke('get_cards').then((cards) => { 
-    let containers = document.getElementsByClassName("container");
-    for (let i = 0; i < cards.length; i++) {
-      let newDiv = createNewDraggableDiv(cards[i]);
-      let containerId = cards[i].container_id;
-      appendDraggableToContainer(newDiv, containerId, containers);
+  invoke('get_cards').then((cards) => {
+    if (cards.length > 0) {
+      let todayDate = cards[0].date;
+      debugMsgEl.textContent = todayDate;
+      let containers = document.getElementsByClassName("container");
+      for (let i = 0; i < cards.length; i++) {
+        let newDiv = createNewDraggableDiv(cards[i]);
+        let containerId = cards[i].container_id;
+        appendDraggableToContainer(newDiv, containerId, containers);
+      }
     }
    });
 }
