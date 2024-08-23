@@ -6,4 +6,5 @@ pub struct Task {
     pub text: String,
     pub status: String,
     pub container_id: u32,
+    pub date: String,
 }

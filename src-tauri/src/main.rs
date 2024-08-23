@@ -9,11 +9,6 @@ use models::Task;
 const DB_PATH: &str = "tasks.db";
 
 #[tauri::command]
-fn greet(name: &str) -> String {
-    format!("Hello, {}! You've been greeted from Rust!", name)
-}
-
-#[tauri::command]
 fn update_card(card_id: u32, card_text: Option<&str>, new_container_id: Option<u32>) -> String {
     let conn: Connection = Connection::open(DB_PATH).unwrap();
 
@@ -65,12 +60,13 @@ fn create_card(card_text: String, card_status: String, container_id: u32) -> Tas
         text: card_text,
         status: card_status,
         container_id: container_id,
+        date: "".to_string(),
     }
 }
 
 fn create_init_containers(conn: &Connection) -> Result<(), Error> {
     let statuses = ["todo", "doing", "done"];
-    let today_date = Local::now().to_string();
+    let today_date = Local::now().date_naive().to_string();
     for status in statuses {
         conn.execute(
             &format!("INSERT INTO container (status, date) VALUES ('{status}', '{today_date}');"),
@@ -107,8 +103,14 @@ fn try_to_create_db(conn: &Connection) -> Result<(), Error> {
 #[tauri::command]
 fn get_cards() -> Vec<Task> {
     let conn = Connection::open(DB_PATH).unwrap();
+    let today_date = Local::now().date_naive().to_string();
     let mut stmt = conn
-        .prepare("SELECT id, text, status, container_id FROM task")
+        .prepare(&format!(
+            "SELECT task.id, task.text, task.status, task.container_id, container.date 
+            FROM task 
+            INNER JOIN container ON task.container_id = container.id 
+            WHERE container.date = '{today_date}';"
+        ))
         .unwrap();
     let task_iter = stmt
         .query_map([], |row| {
@@ -117,6 +119,7 @@ fn get_cards() -> Vec<Task> {
                 text: row.get(1)?,
                 status: row.get(2)?,
                 container_id: row.get(3)?,
+                date: row.get(4)?,
             })
         })
         .unwrap();
@@ -143,7 +146,6 @@ fn main() {
 
     tauri::Builder::default()
         .invoke_handler(tauri::generate_handler![
-            greet,
             update_card,
             get_cards,
             create_card,
