@@ -1,6 +1,6 @@
 ## What is it:
 
-It's rust-based task tracker
+It's rust-based (tauri) everyday task tracker with statistics
 
 ## How to run for dev:
 
@@ -23,6 +23,12 @@ cd src-tauri
 
 ```bash
 cargo add <dep_name>
+```
+
+## How to build it:
+
+```bash
+yarn tauri build
 ```
 
 ## References links:
