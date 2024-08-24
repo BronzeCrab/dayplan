@@ -52,7 +52,7 @@ fn create_card(card_text: String, card_status: String, container_id: u32) -> Tas
     let res: Vec<u32> = rows.map(|r| r.get(0)).collect().unwrap();
 
     println!(
-        "Hello, from create_card! card_text={}, card_status={}, container_id={}, res={}",
+        "Hello, from create_card! card_text={}, card_status={}, container_id={}, task_id={}",
         card_text, card_status, container_id, res[0]
     );
     Task {
@@ -64,12 +64,25 @@ fn create_card(card_text: String, card_status: String, container_id: u32) -> Tas
     }
 }
 
-fn create_init_containers(conn: &Connection) -> Result<(), Error> {
-    let statuses = ["todo", "doing", "done"];
+fn create_date(conn: &Connection) -> Result<u32, Error> {
     let today_date = Local::now().date_naive().to_string();
+    let mut stmt = conn
+        .prepare(&format!(
+            "INSERT INTO daydate (date) VALUES
+            ('{today_date}') RETURNING daydate.id"
+        ))
+        .unwrap();
+
+    let rows = stmt.query([]).unwrap();
+    let res: Vec<u32> = rows.map(|r| r.get(0)).collect().unwrap();
+    Ok(res[0])
+}
+
+fn create_init_containers(conn: &Connection, date_id: u32) -> Result<(), Error> {
+    let statuses = ["todo", "doing", "done"];
     for status in statuses {
         conn.execute(
-            &format!("INSERT INTO container (status, date) VALUES ('{status}', '{today_date}');"),
+            &format!("INSERT INTO container (status, date_id) VALUES ('{status}', '{date_id}');"),
             (),
         )?;
     }
@@ -78,10 +91,19 @@ fn create_init_containers(conn: &Connection) -> Result<(), Error> {
 
 fn try_to_create_db(conn: &Connection) -> Result<(), Error> {
     conn.execute(
+        "CREATE TABLE daydate (
+            id    INTEGER PRIMARY KEY,
+            date DATE NOT NULL
+        );
+        ",
+        (),
+    )?;
+    conn.execute(
         "CREATE TABLE container (
             id    INTEGER PRIMARY KEY,
             status  TEXT NOT NULL,
-            date DATE NOT NULL
+            date_id INT NOT NULL,
+            FOREIGN KEY (date_id) REFERENCES daydate
         );
         ",
         (),
@@ -91,7 +113,7 @@ fn try_to_create_db(conn: &Connection) -> Result<(), Error> {
             id    INTEGER PRIMARY KEY,
             text  TEXT NOT NULL,
             status  TEXT NOT NULL,
-            container_id INT,
+            container_id INT NOT NULL,
             FOREIGN KEY (container_id) REFERENCES container
         );
         ",
@@ -106,10 +128,11 @@ fn get_cards() -> Vec<Task> {
     let today_date = Local::now().date_naive().to_string();
     let mut stmt = conn
         .prepare(&format!(
-            "SELECT task.id, task.text, task.status, task.container_id, container.date 
+            "SELECT task.id, task.text, task.status, task.container_id, daydate.date
             FROM task 
             INNER JOIN container ON task.container_id = container.id 
-            WHERE container.date = '{today_date}';"
+            INNER JOIN daydate ON container.date_id = daydate.id 
+            WHERE daydate.date = '{today_date}';"
         ))
         .unwrap();
     let task_iter = stmt
@@ -134,12 +157,15 @@ fn main() {
     let conn = Connection::open(DB_PATH).unwrap();
 
     match try_to_create_db(&conn) {
-        Ok(_res) => match create_init_containers(&conn) {
-            Ok(_res) => println!("INFO: ok creation of tables and init containers."),
-            Err(error) => println!(
-                "ERROR: ok creation of tables, but error init containers: {:?}",
-                error
-            ),
+        Ok(_res) => match create_date(&conn) {
+            Ok(date_id) => match create_init_containers(&conn, date_id) {
+                Ok(_res) => println!("INFO: ok creation of tables and init containers."),
+                Err(error) => println!(
+                    "ERROR: ok creation of tables, but error init containers: {:?}",
+                    error
+                ),
+            },
+            Err(error) => println!("ERROR: create date: {:?}", error),
         },
         Err(error) => println!("ERROR: create db res: {:?}", error),
     };
