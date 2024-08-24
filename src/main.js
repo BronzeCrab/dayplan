@@ -157,6 +157,22 @@ function addDraggableEventListeners(draggable) {
   });
 }
 
+function handleArrows() {
+  var leftArrow = document.getElementById("leftArrow");
+  var rightArrow = document.getElementById("rightArrow");
+
+  // When the user clicks on this arrow, go back:
+  leftArrow.onclick = function() {
+    console.log('left');
+  }
+
+  // When the user clicks on this arrow, go forward:
+  rightArrow.onclick = function() {
+    console.log('right');
+  }
+
+}
+
 window.addEventListener("DOMContentLoaded", () => {
   // TODO: remove it later:
   debugMsgEl = document.querySelector("#debug-msg");
@@ -165,6 +181,7 @@ window.addEventListener("DOMContentLoaded", () => {
   handleTaskDelete();
   handleModal();
   handleDragging();
+  handleArrows();
 
 });
 
