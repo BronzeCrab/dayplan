@@ -74,8 +74,10 @@ fn create_date(conn: &Connection) -> Result<u32, Error> {
         .unwrap();
 
     let rows = stmt.query([]).unwrap();
-    let res: Vec<u32> = rows.map(|r| r.get(0)).collect().unwrap();
-    Ok(res[0])
+    match rows.map(|r| r.get(0)).collect::<Vec<u32>>() {
+        Ok(res) => Ok(res[0]),
+        Err(err) => Err(err),
+    }
 }
 
 fn create_init_containers(conn: &Connection, date_id: u32) -> Result<(), Error> {
@@ -161,18 +163,20 @@ fn main() {
     let conn = Connection::open(DB_PATH).unwrap();
 
     match try_to_create_db(&conn) {
-        Ok(_res) => match create_date(&conn) {
-            Ok(date_id) => match create_init_containers(&conn, date_id) {
-                Ok(_res) => println!("INFO: ok creation of tables and init containers."),
-                Err(error) => println!(
-                    "ERROR: ok creation of tables, but error init containers: {:?}",
-                    error
-                ),
-            },
-            Err(error) => println!("ERROR: create date: {:?}", error),
-        },
-        Err(error) => println!("ERROR: create db res: {:?}", error),
+        Ok(res) => println!("INFO: create db res: {:?}", res),
+        Err(error) => println!("ERROR: create db: {:?}", error),
     };
+
+    match create_date(&conn) {
+        Ok(date_id) => match create_init_containers(&conn, date_id) {
+            Ok(_res) => println!("INFO: ok of init containers."),
+            Err(error) => println!(
+                "ERROR: ok creation of tables, but error init containers: {:?}",
+                error
+            ),
+        },
+        Err(error) => println!("ERROR: create date: {:?}", error),
+    }
 
     tauri::Builder::default()
         .invoke_handler(tauri::generate_handler![

@@ -159,6 +159,14 @@ function addDraggableEventListeners(draggable) {
   });
 }
 
+function clearAllDraggableDivs() {
+  var draggables = document.getElementsByClassName('draggable');
+
+  while(draggables[0]) {
+    draggables[0].parentNode.removeChild(draggables[0]);
+  }
+}
+
 function handleArrows() {
   var leftArrow = document.getElementById("leftArrow");
   var rightArrow = document.getElementById("rightArrow");
@@ -166,11 +174,13 @@ function handleArrows() {
   // When the user clicks on this arrow, go back:
   leftArrow.onclick = function() {
     console.log('left');
+    clearAllDraggableDivs();
   }
 
   // When the user clicks on this arrow, go forward:
   rightArrow.onclick = function() {
     console.log('right');
+    clearAllDraggableDivs();
   }
 
 }
