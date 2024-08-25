@@ -26,6 +26,10 @@ async function createCard(cardText, containerId) {
   appendDraggableToContainer(newDiv, containerId, containers);
 }
 
+async function getNextDate() {
+  debugMsgEl.textContent = await invoke("get_next_date", { currentDateStr: debugMsgEl.textContent });
+}
+
 function createNewDraggableDiv(card) {
   const newDiv = document.createElement("div");
   newDiv.setAttribute("id", card.id);
@@ -53,8 +57,8 @@ function appendDraggableToContainer(newDiv, containerId, containers) {
   }
 }
 
-function initGetCards() {
-  invoke('get_cards').then((cards) => {
+async function initGetCards() {
+  await invoke('get_cards').then((cards) => {
     let containers = document.getElementsByClassName("container");
     for (let i = 0; i < cards.length; i++) {
       let newDiv = createNewDraggableDiv(cards[i]);
@@ -181,6 +185,7 @@ function handleArrows() {
   rightArrow.onclick = function() {
     console.log('right');
     clearAllDraggableDivs();
+    getNextDate();
   }
 
 }

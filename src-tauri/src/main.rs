@@ -3,6 +3,7 @@
 use rusqlite::{Connection, Error, Result};
 mod models;
 use chrono::offset::Local;
+use chrono::{NaiveDate, TimeDelta};
 use fallible_iterator::FallibleIterator;
 use models::Task;
 
@@ -64,12 +65,11 @@ fn create_card(card_text: String, container_id: u32) -> Task {
     }
 }
 
-fn create_date(conn: &Connection) -> Result<u32, Error> {
-    let today_date = Local::now().date_naive().to_string();
+fn create_daydate(conn: &Connection, date: String) -> Result<u32, Error> {
     let mut stmt = conn
         .prepare(&format!(
             "INSERT INTO daydate (date) VALUES
-            ('{today_date}') RETURNING daydate.id"
+            ('{date}') RETURNING daydate.id"
         ))
         .unwrap();
 
@@ -159,6 +159,12 @@ fn get_init_date() -> String {
     Local::now().date_naive().to_string()
 }
 
+#[tauri::command]
+fn get_next_date(current_date_str: &str) -> String {
+    let curre_date = NaiveDate::parse_from_str(current_date_str, "%Y-%m-%d").unwrap();
+    (curre_date + TimeDelta::days(1)).to_string()
+}
+
 fn main() {
     let conn = Connection::open(DB_PATH).unwrap();
 
@@ -167,11 +173,13 @@ fn main() {
         Err(error) => println!("ERROR: create db: {:?}", error),
     };
 
-    match create_date(&conn) {
+    let today_date = Local::now().date_naive().to_string();
+
+    match create_daydate(&conn, today_date) {
         Ok(date_id) => match create_init_containers(&conn, date_id) {
-            Ok(_res) => println!("INFO: ok of init containers."),
+            Ok(_res) => println!("INFO: ok of init date containers."),
             Err(error) => println!(
-                "ERROR: ok creation of tables, but error init containers: {:?}",
+                "ERROR: ok creation of date, but error init containers: {:?}",
                 error
             ),
         },
@@ -185,6 +193,7 @@ fn main() {
             create_card,
             delete_card,
             get_init_date,
+            get_next_date,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
