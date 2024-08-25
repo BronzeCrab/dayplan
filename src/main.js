@@ -26,8 +26,9 @@ async function createCard(cardText, containerId) {
   appendDraggableToContainer(newDiv, containerId, containers);
 }
 
-async function getNextDate() {
-  debugMsgEl.textContent = await invoke("get_next_date", { currentDateStr: debugMsgEl.textContent });
+async function getPrevOrNextDate(dir) {
+  debugMsgEl.textContent = await invoke(
+    "get_prev_or_next_date", { currentDateStr: debugMsgEl.textContent, dir: dir });
 }
 
 function createNewDraggableDiv(card) {
@@ -179,13 +180,14 @@ function handleArrows() {
   leftArrow.onclick = function() {
     console.log('left');
     clearAllDraggableDivs();
+    getPrevOrNextDate("left");
   }
 
   // When the user clicks on this arrow, go forward:
   rightArrow.onclick = function() {
     console.log('right');
     clearAllDraggableDivs();
-    getNextDate();
+    getPrevOrNextDate("right");
   }
 
 }

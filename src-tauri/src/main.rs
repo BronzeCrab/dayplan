@@ -160,9 +160,13 @@ fn get_init_date() -> String {
 }
 
 #[tauri::command]
-fn get_next_date(current_date_str: &str) -> String {
+fn get_prev_or_next_date(current_date_str: &str, dir: &str) -> String {
     let curre_date = NaiveDate::parse_from_str(current_date_str, "%Y-%m-%d").unwrap();
-    (curre_date + TimeDelta::days(1)).to_string()
+    if dir == "right" {
+        (curre_date + TimeDelta::days(1)).to_string()
+    } else {
+        (curre_date - TimeDelta::days(1)).to_string()
+    }
 }
 
 fn main() {
@@ -193,7 +197,7 @@ fn main() {
             create_card,
             delete_card,
             get_init_date,
-            get_next_date,
+            get_prev_or_next_date,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
