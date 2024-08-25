@@ -39,12 +39,12 @@ fn delete_card(card_id: u32) -> String {
 }
 
 #[tauri::command]
-fn create_card(card_text: String, card_status: String, container_id: u32) -> Task {
+fn create_card(card_text: String, container_id: u32) -> Task {
     let conn = Connection::open(DB_PATH).unwrap();
     let mut stmt = conn
         .prepare(&format!(
-            "INSERT INTO task (text, status, container_id) VALUES
-            ('{card_text}', '{card_status}', '{container_id}') RETURNING task.id"
+            "INSERT INTO task (text, container_id) VALUES
+            ('{card_text}', '{container_id}') RETURNING task.id"
         ))
         .unwrap();
 
@@ -52,13 +52,13 @@ fn create_card(card_text: String, card_status: String, container_id: u32) -> Tas
     let res: Vec<u32> = rows.map(|r| r.get(0)).collect().unwrap();
 
     println!(
-        "Hello, from create_card! card_text={}, card_status={}, container_id={}, task_id={}",
-        card_text, card_status, container_id, res[0]
+        "Hello, from create_card! card_text={}, container_id={}, task_id={}",
+        card_text, container_id, res[0]
     );
     Task {
         id: res[0],
         text: card_text,
-        status: card_status,
+        status: "".to_string(),
         container_id: container_id,
         date: "".to_string(),
     }
@@ -93,7 +93,7 @@ fn try_to_create_db(conn: &Connection) -> Result<(), Error> {
     conn.execute(
         "CREATE TABLE daydate (
             id    INTEGER PRIMARY KEY,
-            date DATE NOT NULL
+            date DATE NOT NULL UNIQUE
         );
         ",
         (),
@@ -101,7 +101,7 @@ fn try_to_create_db(conn: &Connection) -> Result<(), Error> {
     conn.execute(
         "CREATE TABLE container (
             id    INTEGER PRIMARY KEY,
-            status  TEXT NOT NULL,
+            status  TEXT NOT NULL UNIQUE,
             date_id INT NOT NULL,
             FOREIGN KEY (date_id) REFERENCES daydate
         );
@@ -112,7 +112,6 @@ fn try_to_create_db(conn: &Connection) -> Result<(), Error> {
         "CREATE TABLE task (
             id    INTEGER PRIMARY KEY,
             text  TEXT NOT NULL,
-            status  TEXT NOT NULL,
             container_id INT NOT NULL,
             FOREIGN KEY (container_id) REFERENCES container
         );
@@ -128,7 +127,7 @@ fn get_cards() -> Vec<Task> {
     let today_date = Local::now().date_naive().to_string();
     let mut stmt = conn
         .prepare(&format!(
-            "SELECT task.id, task.text, task.status, task.container_id, daydate.date
+            "SELECT task.id, task.text, container.status, task.container_id, daydate.date
             FROM task 
             INNER JOIN container ON task.container_id = container.id 
             INNER JOIN daydate ON container.date_id = daydate.id 
@@ -151,6 +150,11 @@ fn get_cards() -> Vec<Task> {
         tasks.push(task.unwrap());
     }
     tasks
+}
+
+#[tauri::command]
+fn get_init_date() -> String {
+    Local::now().date_naive().to_string()
 }
 
 fn main() {
@@ -176,6 +180,7 @@ fn main() {
             get_cards,
             create_card,
             delete_card,
+            get_init_date,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

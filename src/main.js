@@ -16,7 +16,7 @@ async function createCard(cardText, containerId) {
   containerId = parseInt(containerId);
   let card = await invoke(
     "create_card", 
-    { cardText: cardText, cardStatus: "todo", containerId: containerId }
+    { cardText: cardText, containerId: containerId }
   );
 
   console.assert(card.container_id === containerId, "error card.containerId != containerId");
@@ -55,16 +55,18 @@ function appendDraggableToContainer(newDiv, containerId, containers) {
 
 function initGetCards() {
   invoke('get_cards').then((cards) => {
-    if (cards.length > 0) {
-      let todayDate = cards[0].date;
-      debugMsgEl.textContent = todayDate;
-      let containers = document.getElementsByClassName("container");
-      for (let i = 0; i < cards.length; i++) {
-        let newDiv = createNewDraggableDiv(cards[i]);
-        let containerId = cards[i].container_id;
-        appendDraggableToContainer(newDiv, containerId, containers);
-      }
+    let containers = document.getElementsByClassName("container");
+    for (let i = 0; i < cards.length; i++) {
+      let newDiv = createNewDraggableDiv(cards[i]);
+      let containerId = cards[i].container_id;
+      appendDraggableToContainer(newDiv, containerId, containers);
     }
+  });
+}
+
+function initGetDate() {
+  invoke('get_init_date').then((todayDate) => {
+      debugMsgEl.textContent = todayDate;
    });
 }
 
@@ -178,6 +180,7 @@ window.addEventListener("DOMContentLoaded", () => {
   debugMsgEl = document.querySelector("#debug-msg");
 
   initGetCards();
+  initGetDate();
   handleTaskDelete();
   handleModal();
   handleDragging();
