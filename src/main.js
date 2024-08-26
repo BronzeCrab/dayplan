@@ -1,15 +1,15 @@
 const { invoke } = window.__TAURI__.tauri;
 
-let debugMsgEl;
+let dateMsgEl;
 
 async function updateCard(cardId, cardText, newContainerId) {
-  debugMsgEl.textContent = await invoke(
+  await invoke(
     "update_card", 
     {cardId: parseInt(cardId), cardText: cardText, newContainerId: parseInt(newContainerId) });
 }
 
 async function deleteCard(cardId) {
-  debugMsgEl.textContent = await invoke("delete_card", { cardId: parseInt(cardId) });
+  await invoke("delete_card", { cardId: parseInt(cardId) });
 }
 
 async function createCard(cardText, containerId) {
@@ -26,8 +26,8 @@ async function createCard(cardText, containerId) {
 }
 
 async function getPrevOrNextDate(dir) {
-  debugMsgEl.textContent = await invoke(
-    "get_prev_or_next_date", { currentDateStr: debugMsgEl.textContent, dir: dir });
+  dateMsgEl.textContent = await invoke(
+    "get_prev_or_next_date", { currentDateStr: dateMsgEl.textContent, dir: dir });
 }
 
 function createNewDraggableDiv(card) {
@@ -82,7 +82,7 @@ async function getCards(currentDate) {
 
 async function initGetDate() {
   await invoke('get_init_date').then((todayDate) => {
-      debugMsgEl.textContent = todayDate;
+      dateMsgEl.textContent = todayDate;
    });
 }
 
@@ -186,7 +186,7 @@ function clearAllDraggableDivs() {
 
 async function handleArrowClick() {
   clearAllDraggableDivs();
-  let currentDate = debugMsgEl.textContent;
+  let currentDate = dateMsgEl.textContent;
   await invoke(
     'try_to_create_date_and_containers',
     { currentDateStr: currentDate }).then((containers_ids) => {
@@ -225,7 +225,7 @@ function handleArrows() {
 
 window.addEventListener("DOMContentLoaded", async () => {
   // TODO: remove it later:
-  debugMsgEl = document.querySelector("#debug-msg");
+  dateMsgEl = document.querySelector("#date-msg");
 
   await initGetCards();
   await initGetDate();
