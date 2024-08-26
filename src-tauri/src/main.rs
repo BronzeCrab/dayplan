@@ -65,7 +65,7 @@ fn create_card(card_text: String, container_id: u32) -> Task {
     }
 }
 
-fn create_daydate(conn: &Connection, date: String) -> Result<u32, Error> {
+fn create_daydate(conn: &Connection, date: &str) -> Result<u32, Error> {
     let mut stmt = conn
         .prepare(&format!(
             "INSERT INTO daydate (date) VALUES
@@ -169,6 +169,21 @@ fn get_prev_or_next_date(current_date_str: &str, dir: &str) -> String {
     }
 }
 
+#[tauri::command]
+fn try_to_create_date_and_containers(current_date_str: &str) {
+    let conn = Connection::open(DB_PATH).unwrap();
+    match create_daydate(&conn, current_date_str) {
+        Ok(date_id) => match create_init_containers(&conn, date_id) {
+            Ok(_res) => println!("INFO: ok of create date containers."),
+            Err(error) => println!(
+                "ERROR: ok creation of date, but error create containers: {:?}",
+                error
+            ),
+        },
+        Err(error) => println!("ERROR: create date: {:?}", error),
+    }
+}
+
 fn main() {
     let conn = Connection::open(DB_PATH).unwrap();
 
@@ -178,17 +193,9 @@ fn main() {
     };
 
     let today_date = Local::now().date_naive().to_string();
+    try_to_create_date_and_containers(&today_date);
 
-    match create_daydate(&conn, today_date) {
-        Ok(date_id) => match create_init_containers(&conn, date_id) {
-            Ok(_res) => println!("INFO: ok of init date containers."),
-            Err(error) => println!(
-                "ERROR: ok creation of date, but error init containers: {:?}",
-                error
-            ),
-        },
-        Err(error) => println!("ERROR: create date: {:?}", error),
-    }
+
 
     tauri::Builder::default()
         .invoke_handler(tauri::generate_handler![
@@ -198,6 +205,7 @@ fn main() {
             delete_card,
             get_init_date,
             get_prev_or_next_date,
+            try_to_create_date_and_containers,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
