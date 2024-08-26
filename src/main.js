@@ -95,9 +95,9 @@ function handleModal() {
     }
   }
   // When the user clicks on this button, create task in db:
-  taskCreateBtn.onclick = function() {
+  taskCreateBtn.onclick = async function() {
     var taskCreateInput = document.getElementById("taskCreateInput");
-    createCard(taskCreateInput.value, modal.dataset.containerId);
+    await createCard(taskCreateInput.value, modal.dataset.containerId);
   }
   // When the user clicks on <span> (x), close the modal
   span.onclick = function() {
@@ -119,9 +119,9 @@ function handleTaskDelete() {
 }
 
 function addDeleteCardOnclick(delTaskBtn) {
-  delTaskBtn.onclick = function() {
+  delTaskBtn.onclick = async function() {
     let graggable = delTaskBtn.parentNode;
-    deleteCard(graggable.id);
+    await deleteCard(graggable.id);
     graggable.remove();
   }
 }
@@ -139,13 +139,13 @@ function handleDragging() {
       event.preventDefault();
     });
 
-    container.addEventListener("drop", function(event) {
+    container.addEventListener("drop", async function(event) {
       event.preventDefault();
       const draggedElement = document.querySelector(".dragging");
       draggedElement.parentNode.removeChild(draggedElement);
       container.appendChild(draggedElement);
       // Then we need to change container_id:
-      updateCard(draggedElement.id, null, container.id);
+      await updateCard(draggedElement.id, null, container.id);
     });
   });
 }
@@ -158,9 +158,9 @@ function addDraggableEventListeners(draggable) {
   draggable.addEventListener("dragend", function() {
     draggable.classList.remove("dragging");
   });
-  draggable.addEventListener("input", function() {
+  draggable.addEventListener("input", async function() {
     console.assert(draggable.childNodes[0].nodeType === Node.TEXT_NODE);
-    updateCard(draggable.id, draggable.childNodes[0].textContent, null);
+    await updateCard(draggable.id, draggable.childNodes[0].textContent, null);
   });
 }
 
@@ -172,20 +172,22 @@ function clearAllDraggableDivs() {
   }
 }
 
-async function handleArrows() {
+function handleArrows() {
   var leftArrow = document.getElementById("leftArrow");
   var rightArrow = document.getElementById("rightArrow");
 
   // When the user clicks on this arrow, go back:
-  leftArrow.onclick = function() {
+  leftArrow.onclick = async function() {
     clearAllDraggableDivs();
-    getPrevOrNextDate("left");
+    await getPrevOrNextDate("left");
   }
 
   // When the user clicks on this arrow, go forward:
   rightArrow.onclick = async function() {
     clearAllDraggableDivs();
     await getPrevOrNextDate("right");
+    console.log('new_date');
+    console.log(debugMsgEl.textContent);
     invoke(
       'try_to_create_date_and_containers', 
       { currentDateStr: debugMsgEl.textContent }).then((containers_ids) => {
@@ -204,7 +206,7 @@ window.addEventListener("DOMContentLoaded", async () => {
   handleTaskDelete();
   handleModal();
   handleDragging();
-  await handleArrows();
+  handleArrows();
 
 });
 
