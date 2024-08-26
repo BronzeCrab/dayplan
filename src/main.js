@@ -22,8 +22,7 @@ async function createCard(cardText, containerId) {
   console.assert(card.container_id === containerId, "error card.containerId != containerId");
 
   let newDiv = createNewDraggableDiv(card);
-  let containers = document.getElementsByClassName("container");
-  appendDraggableToContainer(newDiv, containerId, containers);
+  appendDraggableToContainer(newDiv, containerId);
 }
 
 async function getPrevOrNextDate(dir) {
@@ -51,20 +50,32 @@ function createNewDraggableDiv(card) {
   return newDiv;
 }
 
-function appendDraggableToContainer(newDiv, containerId, containers) {
-  let cardContainer = containers[containerId - 1];
-  if (cardContainer !== undefined) {
-    cardContainer.appendChild(newDiv);
+function appendDraggableToContainer(newDiv, containerId) {
+  let containers = document.getElementsByClassName("container");
+  for (let i = 0; i < containers.length; i++) {
+    if (parseInt(containers[i].id) === containerId) {
+      containers[i].appendChild(newDiv);
+      break;
+    }
   }
 }
 
 async function initGetCards() {
   await invoke('get_cards').then((cards) => {
-    let containers = document.getElementsByClassName("container");
     for (let i = 0; i < cards.length; i++) {
       let newDiv = createNewDraggableDiv(cards[i]);
       let containerId = cards[i].container_id;
-      appendDraggableToContainer(newDiv, containerId, containers);
+      appendDraggableToContainer(newDiv, containerId);
+    }
+  });
+}
+
+async function getCards(currentDate) {
+  await invoke('get_cards', { currentDate: currentDate }).then((cards) => {
+    for (let i = 0; i < cards.length; i++) {
+      let newDiv = createNewDraggableDiv(cards[i]);
+      let containerId = cards[i].container_id;
+      appendDraggableToContainer(newDiv, containerId);
     }
   });
 }
@@ -159,7 +170,8 @@ function addDraggableEventListeners(draggable) {
     draggable.classList.remove("dragging");
   });
   draggable.addEventListener("input", async function() {
-    console.assert(draggable.childNodes[0].nodeType === Node.TEXT_NODE);
+    console.assert(
+      draggable.childNodes[0].nodeType === Node.TEXT_NODE, "nodeType should be TEXT");
     await updateCard(draggable.id, draggable.childNodes[0].textContent, null);
   });
 }
@@ -172,28 +184,42 @@ function clearAllDraggableDivs() {
   }
 }
 
+async function handleArrowClick() {
+  clearAllDraggableDivs();
+  let currentDate = debugMsgEl.textContent;
+  await invoke(
+    'try_to_create_date_and_containers',
+    { currentDateStr: currentDate }).then((containers_ids) => {
+      if (containers_ids.length > 0) {
+        let containers = document.getElementsByClassName("container");
+        console.assert(containers_ids.length === 3, "containers_ids.length should be 3");
+        console.assert(
+          containers_ids.length === containers.length,
+          "containers_ids.length should be === containers.length"
+        );
+        // replace containers id's:
+        for (let i = 0; i < containers.length; i++) {
+          containers[i].id = containers_ids[i];
+        }
+      }
+  });
+  getCards(currentDate);
+}
+
 function handleArrows() {
   var leftArrow = document.getElementById("leftArrow");
   var rightArrow = document.getElementById("rightArrow");
 
   // When the user clicks on this arrow, go back:
   leftArrow.onclick = async function() {
-    clearAllDraggableDivs();
     await getPrevOrNextDate("left");
+    await handleArrowClick();
   }
 
   // When the user clicks on this arrow, go forward:
   rightArrow.onclick = async function() {
-    clearAllDraggableDivs();
     await getPrevOrNextDate("right");
-    console.log('new_date');
-    console.log(debugMsgEl.textContent);
-    invoke(
-      'try_to_create_date_and_containers', 
-      { currentDateStr: debugMsgEl.textContent }).then((containers_ids) => {
-        console.log("containers_ids");
-        console.log(containers_ids);
-    });
+    await handleArrowClick();
   }
 }
 

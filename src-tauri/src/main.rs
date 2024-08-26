@@ -131,16 +131,22 @@ fn try_to_create_db(conn: &Connection) -> Result<(), Error> {
 }
 
 #[tauri::command]
-fn get_cards() -> Vec<Task> {
+fn get_cards(current_date: Option<String>) -> Vec<Task> {
+    let mut curr_date: String = String::new();
+    if current_date.is_some() {
+        curr_date = current_date.unwrap();
+    } else {
+        curr_date = Local::now().date_naive().to_string();
+    }
+
     let conn = Connection::open(DB_PATH).unwrap();
-    let today_date = Local::now().date_naive().to_string();
     let mut stmt = conn
         .prepare(&format!(
             "SELECT task.id, task.text, container.status, task.container_id, daydate.date
-            FROM task 
-            INNER JOIN container ON task.container_id = container.id 
-            INNER JOIN daydate ON container.date_id = daydate.id 
-            WHERE daydate.date = '{today_date}';"
+            FROM task
+            INNER JOIN container ON task.container_id = container.id
+            INNER JOIN daydate ON container.date_id = daydate.id
+            WHERE daydate.date = '{curr_date}';"
         ))
         .unwrap();
     let task_iter = stmt
@@ -161,6 +167,23 @@ fn get_cards() -> Vec<Task> {
     tasks
 }
 
+fn get_containers_ids(conn: &Connection, current_date: &str) -> Vec<u32> {
+    let mut stmt = conn
+        .prepare(&format!(
+            "SELECT container.id
+            FROM container
+            INNER JOIN daydate ON container.date_id = daydate.id
+            WHERE daydate.date = '{current_date}';"
+        ))
+        .unwrap();
+    let cont_id_iter = stmt.query_map([], |row| Ok(row.get(0)?)).unwrap();
+    let mut conteiner_ids: Vec<u32> = Vec::new();
+    for cont_id in cont_id_iter {
+        conteiner_ids.push(cont_id.unwrap());
+    }
+    conteiner_ids
+}
+
 #[tauri::command]
 fn get_init_date() -> String {
     Local::now().date_naive().to_string()
@@ -178,7 +201,7 @@ fn get_prev_or_next_date(current_date_str: &str, dir: &str) -> String {
 
 #[tauri::command]
 fn try_to_create_date_and_containers(current_date_str: &str) -> Vec<u32> {
-    let conn = Connection::open(DB_PATH).unwrap();
+    let conn: Connection = Connection::open(DB_PATH).unwrap();
     match create_daydate(&conn, current_date_str) {
         Ok(date_id) => match create_containers(&conn, date_id) {
             Ok(cont_ids) => {
@@ -195,7 +218,8 @@ fn try_to_create_date_and_containers(current_date_str: &str) -> Vec<u32> {
         },
         Err(error) => {
             println!("ERROR: create date: {:?}", error);
-            Vec::new()
+            // in this case, we should just get containers ids of current_date:
+            get_containers_ids(&conn, current_date_str)
         }
     }
 }
