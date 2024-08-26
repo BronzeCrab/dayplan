@@ -69,8 +69,8 @@ async function initGetCards() {
   });
 }
 
-function initGetDate() {
-  invoke('get_init_date').then((todayDate) => {
+async function initGetDate() {
+  await invoke('get_init_date').then((todayDate) => {
       debugMsgEl.textContent = todayDate;
    });
 }
@@ -195,16 +195,16 @@ async function handleArrows() {
   }
 }
 
-window.addEventListener("DOMContentLoaded", () => {
+window.addEventListener("DOMContentLoaded", async () => {
   // TODO: remove it later:
   debugMsgEl = document.querySelector("#debug-msg");
 
-  initGetCards();
-  initGetDate();
+  await initGetCards();
+  await initGetDate();
   handleTaskDelete();
   handleModal();
   handleDragging();
-  handleArrows();
+  await handleArrows();
 
 });
 
