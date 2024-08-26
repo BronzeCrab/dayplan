@@ -172,24 +172,27 @@ function clearAllDraggableDivs() {
   }
 }
 
-function handleArrows() {
+async function handleArrows() {
   var leftArrow = document.getElementById("leftArrow");
   var rightArrow = document.getElementById("rightArrow");
 
   // When the user clicks on this arrow, go back:
   leftArrow.onclick = function() {
-    console.log('left');
     clearAllDraggableDivs();
     getPrevOrNextDate("left");
   }
 
   // When the user clicks on this arrow, go forward:
-  rightArrow.onclick = function() {
-    console.log('right');
+  rightArrow.onclick = async function() {
     clearAllDraggableDivs();
-    getPrevOrNextDate("right");
+    await getPrevOrNextDate("right");
+    invoke(
+      'try_to_create_date_and_containers', 
+      { currentDateStr: debugMsgEl.textContent }).then((containers_ids) => {
+        console.log("containers_ids");
+        console.log(containers_ids);
+    });
   }
-
 }
 
 window.addEventListener("DOMContentLoaded", () => {

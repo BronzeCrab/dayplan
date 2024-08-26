@@ -69,7 +69,7 @@ fn create_daydate(conn: &Connection, date: &str) -> Result<u32, Error> {
     let mut stmt = conn
         .prepare(&format!(
             "INSERT INTO daydate (date) VALUES
-            ('{date}') RETURNING daydate.id"
+            ('{date}') RETURNING daydate.id;"
         ))
         .unwrap();
 
@@ -80,15 +80,22 @@ fn create_daydate(conn: &Connection, date: &str) -> Result<u32, Error> {
     }
 }
 
-fn create_init_containers(conn: &Connection, date_id: u32) -> Result<(), Error> {
+fn create_containers(conn: &Connection, date_id: u32) -> Result<Vec<u32>, Error> {
+    let mut cont_ids: Vec<u32> = Vec::new();
     let statuses = ["todo", "doing", "done"];
     for status in statuses {
-        conn.execute(
-            &format!("INSERT INTO container (status, date_id) VALUES ('{status}', '{date_id}');"),
-            (),
-        )?;
+        let mut stmt = conn
+            .prepare(&format!(
+                "INSERT INTO container (status, date_id) VALUES ('{status}', '{date_id}') 
+            RETURNING container.id;"
+            ))
+            .unwrap();
+
+        let rows = stmt.query([]).unwrap();
+        let res: Vec<u32> = rows.map(|r| r.get(0)).collect().unwrap();
+        cont_ids.push(res[0]);
     }
-    Ok(())
+    Ok(cont_ids)
 }
 
 fn try_to_create_db(conn: &Connection) -> Result<(), Error> {
@@ -103,7 +110,7 @@ fn try_to_create_db(conn: &Connection) -> Result<(), Error> {
     conn.execute(
         "CREATE TABLE container (
             id    INTEGER PRIMARY KEY,
-            status  TEXT NOT NULL UNIQUE,
+            status  TEXT NOT NULL,
             date_id INT NOT NULL,
             FOREIGN KEY (date_id) REFERENCES daydate
         );
@@ -170,17 +177,26 @@ fn get_prev_or_next_date(current_date_str: &str, dir: &str) -> String {
 }
 
 #[tauri::command]
-fn try_to_create_date_and_containers(current_date_str: &str) {
+fn try_to_create_date_and_containers(current_date_str: &str) -> Vec<u32> {
     let conn = Connection::open(DB_PATH).unwrap();
     match create_daydate(&conn, current_date_str) {
-        Ok(date_id) => match create_init_containers(&conn, date_id) {
-            Ok(_res) => println!("INFO: ok of create date containers."),
-            Err(error) => println!(
-                "ERROR: ok creation of date, but error create containers: {:?}",
-                error
-            ),
+        Ok(date_id) => match create_containers(&conn, date_id) {
+            Ok(cont_ids) => {
+                println!("INFO: ok of create date containers. Res: {:?}", cont_ids);
+                cont_ids
+            }
+            Err(error) => {
+                println!(
+                    "ERROR: ok creation of date, but error create containers: {:?}",
+                    error
+                );
+                Vec::new()
+            }
         },
-        Err(error) => println!("ERROR: create date: {:?}", error),
+        Err(error) => {
+            println!("ERROR: create date: {:?}", error);
+            Vec::new()
+        }
     }
 }
 
@@ -194,8 +210,6 @@ fn main() {
 
     let today_date = Local::now().date_naive().to_string();
     try_to_create_date_and_containers(&today_date);
-
-
 
     tauri::Builder::default()
         .invoke_handler(tauri::generate_handler![
