@@ -6,6 +6,7 @@ use chrono::offset::Local;
 use chrono::{NaiveDate, TimeDelta};
 use fallible_iterator::FallibleIterator;
 use models::Task;
+mod stats;
 
 const DB_PATH: &str = "tasks.db";
 
@@ -132,12 +133,11 @@ fn try_to_create_db(conn: &Connection) -> Result<(), Error> {
 
 #[tauri::command]
 fn get_cards(current_date: Option<String>) -> Vec<Task> {
-    let mut curr_date: String = String::new();
-    if current_date.is_some() {
-        curr_date = current_date.unwrap();
+    let curr_date: String = if current_date.is_some() {
+        current_date.unwrap()
     } else {
-        curr_date = Local::now().date_naive().to_string();
-    }
+        Local::now().date_naive().to_string()
+    };
 
     let conn = Connection::open(DB_PATH).unwrap();
     let mut stmt = conn
@@ -225,6 +225,7 @@ fn try_to_create_date_and_containers(current_date_str: &str) -> Vec<u32> {
 }
 
 fn main() {
+    stats::lol();
     let conn = Connection::open(DB_PATH).unwrap();
 
     match try_to_create_db(&conn) {
