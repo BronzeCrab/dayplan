@@ -60,16 +60,6 @@ function appendDraggableToContainer(newDiv, containerId) {
   }
 }
 
-async function initGetCards() {
-  await invoke('get_cards').then((cards) => {
-    for (let i = 0; i < cards.length; i++) {
-      let newDiv = createNewDraggableDiv(cards[i]);
-      let containerId = cards[i].container_id;
-      appendDraggableToContainer(newDiv, containerId);
-    }
-  });
-}
-
 async function getCards(currentDate) {
   await invoke('get_cards', { currentDate: currentDate }).then((cards) => {
     for (let i = 0; i < cards.length; i++) {
@@ -227,8 +217,8 @@ window.addEventListener("DOMContentLoaded", async () => {
   // TODO: remove it later:
   dateMsgEl = document.querySelector("#date-msg");
 
-  await initGetCards();
   await initGetDate();
+  await getCards(dateMsgEl.textContent);
   handleTaskDelete();
   handleModal();
   handleDragging();

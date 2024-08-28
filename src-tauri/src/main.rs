@@ -132,13 +132,7 @@ fn try_to_create_db(conn: &Connection) -> Result<(), Error> {
 }
 
 #[tauri::command]
-fn get_cards(current_date: Option<String>) -> Vec<Task> {
-    let curr_date: String = if current_date.is_some() {
-        current_date.unwrap()
-    } else {
-        Local::now().date_naive().to_string()
-    };
-
+fn get_cards(current_date: String) -> Vec<Task> {
     let conn = Connection::open(DB_PATH).unwrap();
     let mut stmt = conn
         .prepare(&format!(
@@ -146,7 +140,7 @@ fn get_cards(current_date: Option<String>) -> Vec<Task> {
             FROM task
             INNER JOIN container ON task.container_id = container.id
             INNER JOIN daydate ON container.date_id = daydate.id
-            WHERE daydate.date = '{curr_date}';"
+            WHERE daydate.date = '{current_date}';"
         ))
         .unwrap();
     let task_iter = stmt
@@ -225,8 +219,8 @@ fn try_to_create_date_and_containers(current_date_str: &str) -> Vec<u32> {
 }
 
 fn main() {
-    stats::lol();
     let conn = Connection::open(DB_PATH).unwrap();
+    stats::get_some_stats(&conn);
 
     match try_to_create_db(&conn) {
         Ok(res) => println!("INFO: create db res: {:?}", res),
