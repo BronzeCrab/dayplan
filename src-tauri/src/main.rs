@@ -220,7 +220,6 @@ fn try_to_create_date_and_containers(current_date_str: &str) -> Vec<u32> {
 
 fn main() {
     let conn = Connection::open(DB_PATH).unwrap();
-    stats::get_some_stats(&conn);
 
     match try_to_create_db(&conn) {
         Ok(res) => println!("INFO: create db res: {:?}", res),
@@ -229,6 +228,10 @@ fn main() {
 
     let today_date = Local::now().date_naive().to_string();
     try_to_create_date_and_containers(&today_date);
+
+    let stats = stats::get_some_stats(&conn);
+    println!("stats");
+    println!("{:?}", stats);
 
     tauri::Builder::default()
         .invoke_handler(tauri::generate_handler![

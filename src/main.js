@@ -114,12 +114,12 @@ function handleModal() {
 
 function handleTaskDelete() {
   const delTaskBtns = document.querySelectorAll(".delTaskBtn");
-  delTaskBtns.forEach(delTaskBtn => {
-    addDeleteCardOnclick(delTaskBtn);
+  delTaskBtns.forEach(async delTaskBtn => {
+    await addDeleteCardOnclick(delTaskBtn);
   });
 }
 
-function addDeleteCardOnclick(delTaskBtn) {
+async function addDeleteCardOnclick(delTaskBtn) {
   delTaskBtn.onclick = async function() {
     let graggable = delTaskBtn.parentNode;
     await deleteCard(graggable.id);
