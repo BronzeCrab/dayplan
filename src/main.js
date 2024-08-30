@@ -214,23 +214,37 @@ function handleArrows() {
 }
 
 async function drawFirstChart() {
-  const ctx = document.getElementById('myChart');
-
   let stats = await invoke("get_some_stats");
-  console.log("stats");
   console.log(stats);
+  let labels = [];
+  let adata = [];
+  for (let i = 0; i < stats.length; i++) {
+    labels.push(stats[i]["status"]);
+    adata.push(stats[i]["count"]);
+  }
 
+  const ctx = document.getElementById('myChart');
   new Chart(ctx, {
     type: 'bar',
     data: {
-      labels: ['Red', 'Blue', 'Yellow', 'Green', 'Purple', 'Orange'],
+      labels: labels,
       datasets: [{
-        label: '# of Votes',
-        data: [12, 19, 3, 5, 2, 3],
-        borderWidth: 1
+        label: '# of Tasks',
+        data: adata,
+        borderWidth: 1,
+        backgroundColor: ["red", "grey", "green"]
       }]
     },
     options: {
+      plugins: {
+        legend: {
+          labels: {
+            font: {
+                size: 22
+            }
+          }
+        }
+      },
       scales: {
         y: {
           beginAtZero: true

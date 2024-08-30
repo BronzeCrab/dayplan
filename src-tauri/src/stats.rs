@@ -4,11 +4,7 @@ use serde::Serialize;
 #[derive(Debug, Serialize)]
 pub struct Stats {
     count: u32,
-    task_id: u32,
-    text: String,
     status: String,
-    container_id: u32,
-    date: String,
 }
 
 pub const DB_PATH: &str = "tasks.db";
@@ -18,12 +14,10 @@ pub fn get_some_stats() -> Vec<Stats> {
     let conn = Connection::open(DB_PATH).unwrap();
     let mut stmt = conn
         .prepare(&format!(
-            "SELECT COUNT(task.id), task.id, task.text, container.status, task.container_id,
-            daydate.date
+            "SELECT COUNT(task.id), container.status
             FROM task
             INNER JOIN container ON task.container_id = container.id
-            INNER JOIN daydate ON container.date_id = daydate.id
-            GROUP BY daydate.date, container.status;"
+            GROUP BY container.status ORDER BY container.id;"
         ))
         .unwrap();
 
@@ -31,11 +25,7 @@ pub fn get_some_stats() -> Vec<Stats> {
         .query_map([], |row| {
             Ok(Stats {
                 count: row.get(0)?,
-                task_id: row.get(1)?,
-                text: row.get(2)?,
-                status: row.get(3)?,
-                container_id: row.get(4)?,
-                date: row.get(5)?,
+                status: row.get(1)?,
             })
         })
         .unwrap();
