@@ -215,7 +215,7 @@ function handleArrows() {
 
 async function drawFirstChart() {
   let stats = await invoke("get_some_stats");
-  console.log(stats);
+  
   let labels = [];
   let adata = [];
   for (let i = 0; i < stats.length; i++) {
