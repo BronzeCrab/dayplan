@@ -237,7 +237,7 @@ fn main() {
             get_init_date,
             get_prev_or_next_date,
             try_to_create_date_and_containers,
-            stats::get_some_stats,
+            stats::get_stats_4_bar,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

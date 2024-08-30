@@ -213,9 +213,9 @@ function handleArrows() {
   }
 }
 
-async function drawFirstChart() {
-  let stats = await invoke("get_some_stats");
-  
+async function drawBarChart() {
+  let stats = await invoke("get_stats_4_bar");
+
   let labels = [];
   let adata = [];
   for (let i = 0; i < stats.length; i++) {
@@ -223,7 +223,7 @@ async function drawFirstChart() {
     adata.push(stats[i]["count"]);
   }
 
-  const ctx = document.getElementById('myChart');
+  const ctx = document.getElementById('barChart');
   new Chart(ctx, {
     type: 'bar',
     data: {
@@ -265,7 +265,7 @@ window.addEventListener("DOMContentLoaded", async () => {
   handleDragging();
   handleArrows();
 
-  await drawFirstChart();
+  await drawBarChart();
 
 });
 

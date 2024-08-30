@@ -10,7 +10,7 @@ pub struct Stats {
 pub const DB_PATH: &str = "tasks.db";
 
 #[tauri::command]
-pub fn get_some_stats() -> Vec<Stats> {
+pub fn get_stats_4_bar() -> Vec<Stats> {
     let conn = Connection::open(DB_PATH).unwrap();
     let mut stmt = conn
         .prepare(&format!(
