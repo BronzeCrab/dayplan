@@ -1,5 +1,4 @@
-use rusqlite::{Connection, Error, Result};
-
+use rusqlite::Connection;
 use serde::Serialize;
 
 #[derive(Debug, Serialize)]
@@ -12,7 +11,11 @@ pub struct Stats {
     date: String,
 }
 
-pub fn get_some_stats(conn: &Connection) -> Vec<Stats> {
+pub const DB_PATH: &str = "tasks.db";
+
+#[tauri::command]
+pub fn get_some_stats() -> Vec<Stats> {
+    let conn = Connection::open(DB_PATH).unwrap();
     let mut stmt = conn
         .prepare(&format!(
             "SELECT COUNT(task.id), task.id, task.text, container.status, task.container_id,

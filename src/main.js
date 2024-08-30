@@ -213,6 +213,33 @@ function handleArrows() {
   }
 }
 
+async function drawFirstChart() {
+  const ctx = document.getElementById('myChart');
+
+  let stats = await invoke("get_some_stats");
+  console.log("stats");
+  console.log(stats);
+
+  new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: ['Red', 'Blue', 'Yellow', 'Green', 'Purple', 'Orange'],
+      datasets: [{
+        label: '# of Votes',
+        data: [12, 19, 3, 5, 2, 3],
+        borderWidth: 1
+      }]
+    },
+    options: {
+      scales: {
+        y: {
+          beginAtZero: true
+        }
+      }
+    }
+  });
+}
+
 window.addEventListener("DOMContentLoaded", async () => {
   // TODO: remove it later:
   dateMsgEl = document.querySelector("#date-msg");
@@ -223,6 +250,8 @@ window.addEventListener("DOMContentLoaded", async () => {
   handleModal();
   handleDragging();
   handleArrows();
+
+  await drawFirstChart();
 
 });
 

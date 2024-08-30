@@ -7,8 +7,7 @@ use chrono::{NaiveDate, TimeDelta};
 use fallible_iterator::FallibleIterator;
 use models::Task;
 mod stats;
-
-const DB_PATH: &str = "tasks.db";
+use stats::DB_PATH;
 
 #[tauri::command]
 fn update_card(card_id: u32, card_text: Option<&str>, new_container_id: Option<u32>) -> String {
@@ -229,10 +228,6 @@ fn main() {
     let today_date = Local::now().date_naive().to_string();
     try_to_create_date_and_containers(&today_date);
 
-    let stats = stats::get_some_stats(&conn);
-    println!("stats");
-    println!("{:?}", stats);
-
     tauri::Builder::default()
         .invoke_handler(tauri::generate_handler![
             update_card,
@@ -242,6 +237,7 @@ fn main() {
             get_init_date,
             get_prev_or_next_date,
             try_to_create_date_and_containers,
+            stats::get_some_stats,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
