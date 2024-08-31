@@ -26,7 +26,7 @@ pub fn get_stats_4_bar() -> Vec<BarStats> {
             "SELECT COUNT(task.id), container.status
             FROM task
             RIGHT JOIN container ON task.container_id = container.id
-            GROUP BY container.status ORDER BY container.id;"
+            GROUP BY container.status;"
         ))
         .unwrap();
 
