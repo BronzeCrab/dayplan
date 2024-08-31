@@ -9,6 +9,15 @@ pub struct BarStats {
 
 pub const DB_PATH: &str = "tasks.db";
 
+fn get_index_of_status(status: &str) -> u32 {
+    match status {
+        "todo" => 0,
+        "doing" => 1,
+        "done" => 2,
+        _ => 42,
+    }
+}
+
 #[tauri::command]
 pub fn get_stats_4_bar() -> Vec<BarStats> {
     let conn = Connection::open(DB_PATH).unwrap();
@@ -16,7 +25,7 @@ pub fn get_stats_4_bar() -> Vec<BarStats> {
         .prepare(&format!(
             "SELECT COUNT(task.id), container.status
             FROM task
-            INNER JOIN container ON task.container_id = container.id
+            RIGHT JOIN container ON task.container_id = container.id
             GROUP BY container.status ORDER BY container.id;"
         ))
         .unwrap();
@@ -33,5 +42,8 @@ pub fn get_stats_4_bar() -> Vec<BarStats> {
     for stat in stats_iter {
         stats.push(stat.unwrap());
     }
+
+    stats.sort_by_key(|el: &BarStats| get_index_of_status(&el.status));
+
     stats
 }

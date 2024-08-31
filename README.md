@@ -56,3 +56,7 @@ https://www.w3schools.com/howto/howto_css_modals.asp
 https://stackoverflow.com/questions/19239743/create-multiple-tables-using-single-sql-script-file
 
 https://five.co/blog/how-to-create-one-to-many-relationships-in-sql/
+
+https://stackoverflow.com/questions/69764050/how-to-get-the-indices-that-would-sort-a-vec
+
+https://doc.rust-lang.org/std/primitive.slice.html#method.sort_by_key

@@ -100,7 +100,7 @@ function handleModal() {
   taskCreateBtn.onclick = async function() {
     var taskCreateInput = document.getElementById("taskCreateInput");
     await createCard(taskCreateInput.value, modal.dataset.containerId);
-    await updateBarChart(modal.dataset.containerId);
+    await updateBarChart(modal.dataset.containerId, "+");
   }
   // When the user clicks on <span> (x), close the modal
   span.onclick = function() {
@@ -126,7 +126,7 @@ async function addDeleteCardOnclick(delTaskBtn) {
     let graggable = delTaskBtn.parentNode;
     await deleteCard(graggable.id);
     let containerId = graggable.parentNode.id;
-    await updateBarChart(containerId);
+    await updateBarChart(containerId, "-");
     graggable.remove();
   }
 }
@@ -147,11 +147,15 @@ function handleDragging() {
     container.addEventListener("drop", async function(event) {
       event.preventDefault();
       const draggedElement = document.querySelector(".dragging");
+      let removedFromContainerId = draggedElement.parentNode.id;
       draggedElement.parentNode.removeChild(draggedElement);
       container.appendChild(draggedElement);
-      // Then we need to change container_id:
+      // Then we need to change container_id to new one:
       await updateCard(draggedElement.id, null, container.id);
-      await updateBarChart(container.id);
+      // remove card from this bar in chart:
+      await updateBarChart(removedFromContainerId, "-");
+      // add card from this bar in chart:
+      await updateBarChart(container.id, "+");
     });
   });
 }
@@ -224,7 +228,6 @@ function handleArrows() {
 
 async function drawBarChart() {
   let stats = await invoke("get_stats_4_bar");
-
   let labels = [];
   let adata = [];
   for (let i = 0; i < stats.length; i++) {
@@ -263,12 +266,24 @@ async function drawBarChart() {
   });
 }
 
-async function updateBarChart(containerId) {
+async function updateBarChart(containerId, flag) {
   await invoke(
     'get_container_status_by_id',
-    { containerId: parseInt(containerId) }).then((container_status) => {
+    { containerId: parseInt(containerId) }).then((containerStatus) => {
       barChart.data.datasets.forEach((dataset) => {
-        console.log(dataset.data);
+        for (let i = 0; i < barChart.data.labels.length; i++) {
+          if (barChart.data.labels[i] === containerStatus) {
+            if (flag === "+") {
+              dataset.data[i] += 1
+            } else if (flag === "-") {
+              dataset.data[i] -= 1
+            }
+            else {
+              console.assert(1===2, `Error: strange flag, ${flag}`);
+            }
+            break
+          };
+        };
       });
       barChart.update();
   });
