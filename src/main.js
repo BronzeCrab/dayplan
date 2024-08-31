@@ -2,6 +2,7 @@ const { invoke } = window.__TAURI__.tauri;
 
 let dateMsgEl;
 let barChart;
+let lineChart;
 
 async function updateCard(cardId, cardText, newContainerId) {
   await invoke(
@@ -154,7 +155,7 @@ function handleDragging() {
       await updateCard(draggedElement.id, null, container.id);
       // remove card from this bar in chart:
       await updateBarChart(removedFromContainerId, "-");
-      // add card from this bar in chart:
+      // add card for this bar in chart:
       await updateBarChart(container.id, "+");
     });
   });
@@ -287,6 +288,75 @@ async function updateBarChart(containerId, flag) {
       });
       barChart.update();
   });
+};
+
+async function drawLineChart() {
+  let stats = await invoke("get_stats_4_line");
+
+  let datasets = [
+    {
+      label: 'Todo',
+      data: [],
+      fill: false,
+      borderColor: 'red',
+      tension: 0.1
+    },
+    {
+      label: 'Doing',
+      data: [],
+      fill: false,
+      borderColor: 'grey',
+      tension: 0.1
+    },
+    {
+      label: 'Done',
+      data: [],
+      fill: false,
+      borderColor: 'green',
+      tension: 0.1
+    }
+  ];
+
+  let labels = [];
+  for (let i = 0; i < stats.length; i++) {
+    if (!labels.includes(stats[i]["date"])) {
+      labels.push(stats[i]["date"]);
+    };
+    for (let j = 0; j < datasets.length; j++) {
+      if (stats[i]["status"].toLowerCase() === datasets[j].label.toLowerCase()) {
+        datasets[j].data.push(stats[i]["count"]);
+        break;
+      }
+    };
+  }
+
+  const ctx = document.getElementById('lineChart');
+  lineChart = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: labels,
+      datasets: datasets,
+    },
+    options: {
+      plugins: {
+        legend: {
+          labels: {
+            font: {
+                size: 22
+            }
+          }
+        }
+      },
+      scales: {
+        x: {
+          beginAtZero: true
+        },
+        y: {
+          beginAtZero: true
+        }
+      }
+    }
+  });
 }
 
 window.addEventListener("DOMContentLoaded", async () => {
@@ -301,6 +371,7 @@ window.addEventListener("DOMContentLoaded", async () => {
   handleArrows();
 
   await drawBarChart();
+  await drawLineChart();
 
 });
 

@@ -7,6 +7,13 @@ pub struct BarStats {
     status: String,
 }
 
+#[derive(Debug, Serialize)]
+pub struct LineStats {
+    count: u32,
+    status: String,
+    date: String,
+}
+
 pub const DB_PATH: &str = "tasks.db";
 
 fn get_index_of_status(status: &str) -> u32 {
@@ -45,5 +52,35 @@ pub fn get_stats_4_bar() -> Vec<BarStats> {
 
     stats.sort_by_key(|el: &BarStats| get_index_of_status(&el.status));
 
+    stats
+}
+
+#[tauri::command]
+pub fn get_stats_4_line() -> Vec<LineStats> {
+    let conn = Connection::open(DB_PATH).unwrap();
+    let mut stmt = conn
+        .prepare(&format!(
+            "SELECT COUNT(task.id), container.status, daydate.date
+            FROM task
+            RIGHT JOIN container ON task.container_id = container.id
+            INNER JOIN daydate ON container.date_id = daydate.id
+            GROUP BY container.status, daydate.date
+            ORDER BY daydate.date ASC;"
+        ))
+        .unwrap();
+
+    let stats_iter = stmt
+        .query_map([], |row| {
+            Ok(LineStats {
+                count: row.get(0)?,
+                status: row.get(1)?,
+                date: row.get(2)?,
+            })
+        })
+        .unwrap();
+    let mut stats: Vec<LineStats> = Vec::new();
+    for stat in stats_iter {
+        stats.push(stat.unwrap());
+    }
     stats
 }
