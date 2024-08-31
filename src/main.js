@@ -100,7 +100,7 @@ function handleModal() {
   taskCreateBtn.onclick = async function() {
     var taskCreateInput = document.getElementById("taskCreateInput");
     await createCard(taskCreateInput.value, modal.dataset.containerId);
-    updateBarChart();
+    await updateBarChart(modal.dataset.containerId);
   }
   // When the user clicks on <span> (x), close the modal
   span.onclick = function() {
@@ -125,6 +125,8 @@ async function addDeleteCardOnclick(delTaskBtn) {
   delTaskBtn.onclick = async function() {
     let graggable = delTaskBtn.parentNode;
     await deleteCard(graggable.id);
+    let containerId = graggable.parentNode.id;
+    await updateBarChart(containerId);
     graggable.remove();
   }
 }
@@ -149,6 +151,7 @@ function handleDragging() {
       container.appendChild(draggedElement);
       // Then we need to change container_id:
       await updateCard(draggedElement.id, null, container.id);
+      await updateBarChart(container.id);
     });
   });
 }
@@ -260,11 +263,15 @@ async function drawBarChart() {
   });
 }
 
-function updateBarChart() {
-  barChart.data.datasets.forEach((dataset) => {
-    console.log(dataset.data);
+async function updateBarChart(containerId) {
+  await invoke(
+    'get_container_status_by_id',
+    { containerId: parseInt(containerId) }).then((container_status) => {
+      barChart.data.datasets.forEach((dataset) => {
+        console.log(dataset.data);
+      });
+      barChart.update();
   });
-  barChart.update();
 }
 
 window.addEventListener("DOMContentLoaded", async () => {
