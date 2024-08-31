@@ -18,6 +18,7 @@ yarn tauri dev
 ```
 
 ## How to add rust dep:
+
 ```bash
 cd src-tauri
 ```
@@ -29,10 +30,18 @@ cargo add <dep_name>
 ## How to update dependecies:
 
 ```sh
+cd src-tauri
+```
+
+```sh
 cargo update
 ```
 
 ## How to build it:
+
+```sh
+cd src-tauri
+```
 
 ```bash
 yarn tauri build
