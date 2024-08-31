@@ -2,7 +2,7 @@ use rusqlite::Connection;
 use serde::Serialize;
 
 #[derive(Debug, Serialize)]
-pub struct Stats {
+pub struct BarStats {
     count: u32,
     status: String,
 }
@@ -10,7 +10,7 @@ pub struct Stats {
 pub const DB_PATH: &str = "tasks.db";
 
 #[tauri::command]
-pub fn get_stats_4_bar() -> Vec<Stats> {
+pub fn get_stats_4_bar() -> Vec<BarStats> {
     let conn = Connection::open(DB_PATH).unwrap();
     let mut stmt = conn
         .prepare(&format!(
@@ -23,13 +23,13 @@ pub fn get_stats_4_bar() -> Vec<Stats> {
 
     let stats_iter = stmt
         .query_map([], |row| {
-            Ok(Stats {
+            Ok(BarStats {
                 count: row.get(0)?,
                 status: row.get(1)?,
             })
         })
         .unwrap();
-    let mut stats: Vec<Stats> = Vec::new();
+    let mut stats: Vec<BarStats> = Vec::new();
     for stat in stats_iter {
         stats.push(stat.unwrap());
     }

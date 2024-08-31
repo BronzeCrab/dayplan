@@ -1,6 +1,7 @@
 const { invoke } = window.__TAURI__.tauri;
 
 let dateMsgEl;
+let barChart;
 
 async function updateCard(cardId, cardText, newContainerId) {
   await invoke(
@@ -99,6 +100,7 @@ function handleModal() {
   taskCreateBtn.onclick = async function() {
     var taskCreateInput = document.getElementById("taskCreateInput");
     await createCard(taskCreateInput.value, modal.dataset.containerId);
+    updateBarChart();
   }
   // When the user clicks on <span> (x), close the modal
   span.onclick = function() {
@@ -174,9 +176,7 @@ function clearAllDraggableDivs() {
   }
 }
 
-async function handleArrowClick() {
-  clearAllDraggableDivs();
-  let currentDate = dateMsgEl.textContent;
+async function getAndSetContainersIds(currentDate) {
   await invoke(
     'try_to_create_date_and_containers',
     { currentDateStr: currentDate }).then((containers_ids) => {
@@ -193,6 +193,12 @@ async function handleArrowClick() {
         }
       }
   });
+}
+
+async function handleArrowClick() {
+  clearAllDraggableDivs();
+  let currentDate = dateMsgEl.textContent;
+  await getAndSetContainersIds(currentDate);
   getCards(currentDate);
 }
 
@@ -224,7 +230,7 @@ async function drawBarChart() {
   }
 
   const ctx = document.getElementById('barChart');
-  new Chart(ctx, {
+  barChart = new Chart(ctx, {
     type: 'bar',
     data: {
       labels: labels,
@@ -254,11 +260,18 @@ async function drawBarChart() {
   });
 }
 
+function updateBarChart() {
+  barChart.data.datasets.forEach((dataset) => {
+    console.log(dataset.data);
+  });
+  barChart.update();
+}
+
 window.addEventListener("DOMContentLoaded", async () => {
-  // TODO: remove it later:
   dateMsgEl = document.querySelector("#date-msg");
 
   await initGetDate();
+  await getAndSetContainersIds(dateMsgEl.textContent);
   await getCards(dateMsgEl.textContent);
   handleTaskDelete();
   handleModal();
