@@ -27,7 +27,7 @@ cd src-tauri
 cargo add <dep_name>
 ```
 
-## How to update dependecies:
+## How to update dependencies:
 
 ```sh
 cd src-tauri
