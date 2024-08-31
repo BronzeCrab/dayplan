@@ -1,6 +1,7 @@
 ## What is it:
 
-It's rust-based (tauri) everyday task tracker with statistics
+It's free trello-like task tracker for everyday with drag-n-drop,
+written in `js` and `rust`(`tauri`). With some statistics made with `Chart.js`.
 
 ## How to run for dev:
 
@@ -23,6 +24,12 @@ cd src-tauri
 
 ```bash
 cargo add <dep_name>
+```
+
+## How to update dependecies:
+
+```sh
+cargo update
 ```
 
 ## How to build it:

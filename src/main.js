@@ -359,6 +359,10 @@ async function drawLineChart() {
   });
 }
 
+async function updateLineChart(containerId, flag) {
+
+}
+
 window.addEventListener("DOMContentLoaded", async () => {
   dateMsgEl = document.querySelector("#date-msg");
 
