@@ -102,6 +102,7 @@ function handleModal() {
     var taskCreateInput = document.getElementById("taskCreateInput");
     await createCard(taskCreateInput.value, modal.dataset.containerId);
     await updateBarChart(modal.dataset.containerId, "+");
+    await updateLineChart(modal.dataset.containerId, "+");
   }
   // When the user clicks on <span> (x), close the modal
   span.onclick = function() {
@@ -128,6 +129,7 @@ async function addDeleteCardOnclick(delTaskBtn) {
     await deleteCard(graggable.id);
     let containerId = graggable.parentNode.id;
     await updateBarChart(containerId, "-");
+    await updateLineChart(containerId, "-");
     graggable.remove();
   }
 }
@@ -157,6 +159,11 @@ function handleDragging() {
       await updateBarChart(removedFromContainerId, "-");
       // add card for this bar in chart:
       await updateBarChart(container.id, "+");
+
+      // remove card from this line in chart:
+      await updateLineChart(removedFromContainerId, "-");
+      // add card for this line in chart:
+      await updateLineChart(container.id, "+");
     });
   });
 }
@@ -360,7 +367,32 @@ async function drawLineChart() {
 }
 
 async function updateLineChart(containerId, flag) {
-
+  await invoke(
+    'get_container_status_by_id',
+    { containerId: parseInt(containerId) }).then((containerStatus) => {
+      let dateIndex;
+      // first find labels index (right date):
+      for (let i = 0; i < lineChart.data.labels.length; i++) {
+        if (lineChart.data.labels[i].toLowerCase() === dateMsgEl.textContent.toLowerCase()) {
+          dateIndex = i;
+          break;
+        };
+      };
+      // then iterate over all datasets to find right status dataset:
+      for (let j = 0; j < lineChart.data.datasets.length; j++) {
+        if (lineChart.data.datasets[j].label.toLowerCase() === containerStatus.toLowerCase()) {
+          if (flag === "+") {
+            lineChart.data.datasets[j].data[dateIndex] += 1;
+          } else if (flag === "-") {
+            lineChart.data.datasets[j].data[dateIndex] -= 1;
+          } else {
+            console.assert(1===2, `Error: strange flag, ${flag}`);
+          }
+          break;
+        }
+      };
+      lineChart.update();
+  });
 }
 
 window.addEventListener("DOMContentLoaded", async () => {
