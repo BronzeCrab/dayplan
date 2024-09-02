@@ -98,6 +98,28 @@ fn create_containers(conn: &Connection, date_id: u32) -> Result<Vec<u32>, Error>
     Ok(cont_ids)
 }
 
+fn create_categories(conn: &Connection) -> Result<Vec<u32>, Error> {
+    let mut cat_ids: Vec<u32> = Vec::new();
+    let categories = ["sport", "work", "education"];
+    for category in categories {
+        let mut stmt = conn
+            .prepare(&format!(
+                "INSERT INTO category (name) VALUES ('{category}') 
+            RETURNING category.id;"
+            ))
+            .unwrap();
+
+        let rows = stmt.query([]).unwrap();
+        match rows.map(|r| r.get(0)).collect::<Vec<u32>>() {
+            Ok(res) => {
+                cat_ids.push(res[0]);
+            }
+            Err(err) => return Err(err),
+        };
+    }
+    Ok(cat_ids)
+}
+
 fn try_to_create_db(conn: &Connection) -> Result<(), Error> {
     conn.execute(
         "CREATE TABLE daydate (
@@ -127,6 +149,26 @@ fn try_to_create_db(conn: &Connection) -> Result<(), Error> {
         ",
         (),
     )?;
+    conn.execute(
+        "CREATE TABLE category (
+            id    INTEGER PRIMARY KEY,
+            name  TEXT NOT NULL UNIQUE
+        );
+        ",
+        (),
+    )?;
+    conn.execute(
+        "CREATE TABLE task_category (
+            task_id INT NOT NULL,
+            category_id INT NOT NULL,
+            PRIMARY KEY (task_id, category_id),
+            FOREIGN KEY (task_id) REFERENCES task,
+            FOREIGN KEY (category_id) REFERENCES category
+        );
+        ",
+        (),
+    )?;
+
     Ok(())
 }
 
@@ -239,6 +281,11 @@ fn main() {
         Ok(res) => println!("INFO: create db res: {:?}", res),
         Err(error) => println!("ERROR: create db: {:?}", error),
     };
+
+    match create_categories(&conn) {
+        Ok(res) => println!("INFO: create categories res: {:?}", res),
+        Err(error) => println!("ERROR: create categories - {:?}", error),
+    }
 
     let today_date = Local::now().date_naive().to_string();
     try_to_create_date_and_containers(&today_date);

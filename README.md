@@ -76,3 +76,5 @@ https://five.co/blog/how-to-create-one-to-many-relationships-in-sql/
 https://stackoverflow.com/questions/69764050/how-to-get-the-indices-that-would-sort-a-vec
 
 https://doc.rust-lang.org/std/primitive.slice.html#method.sort_by_key
+
+https://www.geeksforgeeks.org/relationships-in-sql-one-to-one-one-to-many-many-to-many/
