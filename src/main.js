@@ -395,6 +395,17 @@ async function updateLineChart(containerId, flag) {
   });
 }
 
+async function setCategoriesOptions() {
+  let cats = await invoke('get_categories');
+  let catSelectEl = document.getElementById("categories");
+  for (let i = 0; i < cats.length; i++) {
+    const newOption = document.createElement("option");
+    newOption.setAttribute("value", cats[i]);
+    newOption.innerHTML = cats[i];
+    catSelectEl.appendChild(newOption);
+  };
+};
+
 window.addEventListener("DOMContentLoaded", async () => {
   dateMsgEl = document.querySelector("#date-msg");
 
@@ -405,9 +416,13 @@ window.addEventListener("DOMContentLoaded", async () => {
   handleModal();
   handleDragging();
   handleArrows();
+  await setCategoriesOptions();
 
   await drawBarChart();
   await drawLineChart();
+
+
+
 
 });
 

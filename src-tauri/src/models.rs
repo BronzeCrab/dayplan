@@ -8,3 +8,16 @@ pub struct Task {
     pub container_id: u32,
     pub date: String,
 }
+
+#[derive(Debug, Serialize)]
+pub struct BarStats {
+    pub count: u32,
+    pub status: String,
+}
+
+#[derive(Debug, Serialize)]
+pub struct LineStats {
+    pub count: u32,
+    pub status: String,
+    pub date: String,
+}

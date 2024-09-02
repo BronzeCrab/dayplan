@@ -220,6 +220,20 @@ fn get_containers_ids(conn: &Connection, current_date: &str) -> Vec<u32> {
 }
 
 #[tauri::command]
+fn get_categories() -> Vec<String> {
+    let conn = Connection::open(DB_PATH).unwrap();
+    let mut stmt = conn
+        .prepare(&format!("SELECT category.name FROM category;"))
+        .unwrap();
+    let cat_iter = stmt.query_map([], |row| Ok(row.get(0)?)).unwrap();
+    let mut cats: Vec<String> = Vec::new();
+    for cat in cat_iter {
+        cats.push(cat.unwrap());
+    }
+    cats
+}
+
+#[tauri::command]
 fn get_init_date() -> String {
     Local::now().date_naive().to_string()
 }
@@ -302,6 +316,7 @@ fn main() {
             get_container_status_by_id,
             stats::get_stats_4_bar,
             stats::get_stats_4_line,
+            get_categories,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

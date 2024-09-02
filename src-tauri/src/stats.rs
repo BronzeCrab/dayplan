@@ -1,18 +1,5 @@
+use crate::models::{BarStats, LineStats};
 use rusqlite::Connection;
-use serde::Serialize;
-
-#[derive(Debug, Serialize)]
-pub struct BarStats {
-    count: u32,
-    status: String,
-}
-
-#[derive(Debug, Serialize)]
-pub struct LineStats {
-    count: u32,
-    status: String,
-    date: String,
-}
 
 pub const DB_PATH: &str = "tasks.db";
 
