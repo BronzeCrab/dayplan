@@ -123,7 +123,14 @@ fn create_containers(conn: &Connection, date_id: u32) -> Result<Vec<u32>, Error>
 
 fn create_categories(conn: &Connection) -> Result<Vec<u32>, Error> {
     let mut cat_ids: Vec<u32> = Vec::new();
-    let categories = ["sport", "work", "education"];
+    let categories = [
+        "sport",
+        "work",
+        "education",
+        "projects",
+        "other",
+        "relationships",
+    ];
     for category in categories {
         let mut stmt = conn
             .prepare(&format!(
@@ -341,9 +348,9 @@ fn main() {
             get_prev_or_next_date,
             try_to_create_date_and_containers,
             get_container_status_by_id,
+            get_categories,
             stats::get_stats_4_bar,
             stats::get_stats_4_line,
-            get_categories,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
