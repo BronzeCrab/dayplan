@@ -1,5 +1,7 @@
 // Prevents additional console window on Windows in release, DO NOT REMOVE!!
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
+use std::usize;
+
 use rusqlite::{Connection, Error, Result};
 mod models;
 use chrono::offset::Local;
@@ -220,14 +222,18 @@ fn get_containers_ids(conn: &Connection, current_date: &str) -> Vec<u32> {
 }
 
 #[tauri::command]
-fn get_categories() -> Vec<String> {
+fn get_categories() -> Vec<[String; 2]> {
     let conn = Connection::open(DB_PATH).unwrap();
     let mut stmt = conn
-        .prepare(&format!("SELECT category.name FROM category;"))
+        .prepare(&format!("SELECT category.id, category.name FROM category;"))
         .unwrap();
-    let cat_iter = stmt.query_map([], |row| Ok(row.get(0)?)).unwrap();
-    let mut cats: Vec<String> = Vec::new();
-    for cat in cat_iter {
+    let cats_iter = stmt
+        .query_map([], |row| {
+            Ok([row.get::<usize, u32>(0)?.to_string(), row.get(1)?])
+        })
+        .unwrap();
+    let mut cats: Vec<[String; 2]> = Vec::new();
+    for cat in cats_iter {
         cats.push(cat.unwrap());
     }
     cats

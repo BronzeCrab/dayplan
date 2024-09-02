@@ -400,8 +400,8 @@ async function setCategoriesOptions() {
   let catSelectEl = document.getElementById("categories");
   for (let i = 0; i < cats.length; i++) {
     const newOption = document.createElement("option");
-    newOption.setAttribute("value", cats[i]);
-    newOption.innerHTML = cats[i];
+    newOption.setAttribute("value", cats[i][0]);
+    newOption.innerHTML = cats[i][1];
     catSelectEl.appendChild(newOption);
   };
 };
@@ -420,9 +420,6 @@ window.addEventListener("DOMContentLoaded", async () => {
 
   await drawBarChart();
   await drawLineChart();
-
-
-
 
 });
 
