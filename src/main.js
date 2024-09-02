@@ -14,11 +14,11 @@ async function deleteCard(cardId) {
   await invoke("delete_card", { cardId: parseInt(cardId) });
 }
 
-async function createCard(cardText, containerId) {
+async function createCard(cardText, containerId, categoriesIds) {
   containerId = parseInt(containerId);
   let card = await invoke(
     "create_card", 
-    { cardText: cardText, containerId: containerId }
+    { cardText: cardText, containerId: containerId, categoriesIds: categoriesIds }
   );
 
   console.assert(card.container_id === containerId, "error card.containerId != containerId");
@@ -78,6 +78,16 @@ async function initGetDate() {
    });
 }
 
+function getSelectedCategoriesIds() {
+  let categoriesIds = [];
+  let catSelectEl = document.getElementById("categoriesSel");
+  let selectedOptions = catSelectEl.selectedOptions;
+  for (let i = 0; i < selectedOptions.length; i++) {
+    categoriesIds.push(parseInt(selectedOptions[i].value));
+  }
+  return categoriesIds;
+}
+
 function handleModal() {
   // Get the modal
   var modal = document.getElementById("myModal");
@@ -100,7 +110,8 @@ function handleModal() {
   // When the user clicks on this button, create task in db:
   taskCreateBtn.onclick = async function() {
     var taskCreateInput = document.getElementById("taskCreateInput");
-    await createCard(taskCreateInput.value, modal.dataset.containerId);
+    let categoriesIds = getSelectedCategoriesIds();
+    await createCard(taskCreateInput.value, modal.dataset.containerId, categoriesIds);
     await updateBarChart(modal.dataset.containerId, "+");
     await updateLineChart(modal.dataset.containerId, "+");
   }
@@ -397,7 +408,7 @@ async function updateLineChart(containerId, flag) {
 
 async function setCategoriesOptions() {
   let cats = await invoke('get_categories');
-  let catSelectEl = document.getElementById("categories");
+  let catSelectEl = document.getElementById("categoriesSel");
   for (let i = 0; i < cats.length; i++) {
     const newOption = document.createElement("option");
     newOption.setAttribute("value", cats[i][0]);

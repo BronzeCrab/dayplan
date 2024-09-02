@@ -42,7 +42,7 @@ fn delete_card(card_id: u32) -> String {
 }
 
 #[tauri::command]
-fn create_card(card_text: String, container_id: u32) -> Task {
+fn create_card(card_text: String, container_id: u32, categories_ids: Vec<u32>) -> Task {
     let conn = Connection::open(DB_PATH).unwrap();
     let mut stmt = conn
         .prepare(&format!(
@@ -58,13 +58,34 @@ fn create_card(card_text: String, container_id: u32) -> Task {
         "Hello, from create_card! card_text={}, container_id={}, task_id={}",
         card_text, container_id, res[0]
     );
+
+    let task_id: u32 = res[0];
+    let _ = create_task_categories_relations(&conn, task_id, categories_ids);
+
     Task {
-        id: res[0],
+        id: task_id,
         text: card_text,
         status: "".to_string(),
         container_id: container_id,
         date: "".to_string(),
     }
+}
+
+fn create_task_categories_relations(
+    conn: &Connection,
+    task_id: u32,
+    categories_ids: Vec<u32>,
+) -> Result<(), Error> {
+    for category_id in categories_ids {
+        let _ = conn.execute(
+            &format!(
+                "INSERT INTO task_category (task_id, category_id) VALUES 
+                ({task_id}, {category_id});"
+            ),
+            (),
+        );
+    }
+    Ok(())
 }
 
 fn create_daydate(conn: &Connection, date: &str) -> Result<u32, Error> {
