@@ -162,7 +162,7 @@ fn create_categories(conn: &Connection) -> Result<Vec<u32>, Error> {
     Ok(cat_ids)
 }
 
-fn try_to_create_db(conn: &Connection) -> Result<(), Error> {
+fn try_to_create_db_tables(conn: &Connection) -> Result<(), Error> {
     conn.execute(
         "CREATE TABLE daydate (
             id    INTEGER PRIMARY KEY,
@@ -337,7 +337,7 @@ fn get_container_status_by_id(container_id: u32) -> String {
 fn main() {
     let conn = Connection::open(DB_PATH).unwrap();
 
-    match try_to_create_db(&conn) {
+    match try_to_create_db_tables(&conn) {
         Ok(res) => println!("INFO: create db res: {:?}", res),
         Err(error) => println!("ERROR: create db: {:?}", error),
     };
@@ -363,6 +363,7 @@ fn main() {
             get_categories,
             stats::get_stats_4_bar,
             stats::get_stats_4_line,
+            stats::get_stats_4_polar,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

@@ -3,6 +3,7 @@ const { invoke } = window.__TAURI__.tauri;
 let dateMsgEl;
 let barChart;
 let lineChart;
+let polarChart;
 
 async function updateCard(cardId, cardText, newContainerId) {
   await invoke(
@@ -417,6 +418,36 @@ async function setCategoriesOptions() {
   };
 };
 
+async function drawPolarChart() {
+  let stats = await invoke("get_stats_4_polar");
+
+  let labels = [];
+  let adata = [];
+  let backgroundColor = [];
+
+  for (let i = 0; i < stats.length; i++) {
+    labels.push(stats[i]["name"]);
+    adata.push(stats[i]["count"]);
+    backgroundColor.push("red");
+  }
+
+  const ctx = document.getElementById('polarChart');
+  polarChart = new Chart(ctx, {
+    type: 'polarArea',
+    data: {
+      labels: labels,
+      datasets: [{
+        label: '# of Tasks by categories:',
+        data: adata,
+        borderWidth: 1,
+        backgroundColor: backgroundColor
+      }]
+    },
+    options: {
+    }
+  });
+}
+
 window.addEventListener("DOMContentLoaded", async () => {
   dateMsgEl = document.querySelector("#date-msg");
 
@@ -431,6 +462,7 @@ window.addEventListener("DOMContentLoaded", async () => {
 
   await drawBarChart();
   await drawLineChart();
+  await drawPolarChart();
 
 });
 

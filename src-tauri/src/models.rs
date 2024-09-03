@@ -21,3 +21,9 @@ pub struct LineStats {
     pub status: String,
     pub date: String,
 }
+
+#[derive(Debug, Serialize)]
+pub struct PolarStats {
+    pub count: u32,
+    pub name: String,
+}
