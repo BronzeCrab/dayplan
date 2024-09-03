@@ -30,6 +30,9 @@ fn update_card(card_id: u32, card_text: Option<&str>, new_container_id: Option<u
 #[tauri::command]
 fn delete_card(card_id: u32) -> String {
     let conn: Connection = Connection::open(DB_PATH).unwrap();
+
+    let _ = delete_task_categories_relations(&conn, card_id);
+
     conn.execute(
         &format!(
             "DELETE from task
@@ -38,7 +41,16 @@ fn delete_card(card_id: u32) -> String {
         (),
     )
     .unwrap();
+
     format!("Hello, from delete_card! card_id={}", card_id)
+}
+
+fn delete_task_categories_relations(conn: &Connection, task_id: u32) -> Result<(), Error> {
+    let _ = conn.execute(
+        &format!("DELETE from task_category WHERE task_id = {task_id};"),
+        (),
+    );
+    Ok(())
 }
 
 #[tauri::command]
