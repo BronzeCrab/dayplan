@@ -307,7 +307,7 @@ async function updateBarChart(containerId, flag) {
               dataset.data[i] -= 1
             }
             else {
-              console.assert(1===2, `Error: strange flag, ${flag}`);
+              console.assert(false, `Error: strange flag, ${flag}`);
             }
             break
           };
@@ -406,7 +406,7 @@ async function updateLineChart(containerId, flag) {
           } else if (flag === "-") {
             lineChart.data.datasets[j].data[dateIndex] -= 1;
           } else {
-            console.assert(1===2, `Error: strange flag, ${flag}`);
+            console.assert(false, `Error: strange flag, ${flag}`);
           }
           break;
         }
