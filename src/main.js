@@ -475,8 +475,16 @@ function updatePolarChart(categoriesNames, flag) {
   for (let i = 0; i < categoriesNames.length; i++) {
     let categoryName = categoriesNames[i].toLowerCase().trim();
     let categoryNameIndex = polarChart.data.labels.indexOf(categoryName);
-    if (categoryNameIndex === -1) {
-      console.assert(false, `ERROR: no such categoryName ${categoryName} in polarChart!`);
+    if (categoryNameIndex === -1 && flag === "-") {
+      console.assert(
+        false,
+        `ERROR: no such categoryName ${categoryName} in polarChart! Flag is ${flag}`
+      );
+    }
+    // This case is indeed possible (we added new card with new category)
+    else if (categoryNameIndex === -1 && flag === "+") {
+      polarChart.data.labels.push(categoryName);
+      polarChart.data.datasets[0].data.push(1);
     }
     else {
       if (flag === "+") {
