@@ -99,3 +99,23 @@ pub fn get_stats_4_polar() -> Vec<PolarStats> {
     }
     stats
 }
+
+#[tauri::command]
+pub fn get_categories_names_by_task_id(card_id: u32) -> Vec<String> {
+    let conn = Connection::open(DB_PATH).unwrap();
+    let mut stmt = conn
+        .prepare(&format!(
+            "SELECT category.name
+            FROM category
+            INNER JOIN task_category ON category.id = task_category.category_id
+            WHERE task_category.task_id = {card_id};"
+        ))
+        .unwrap();
+
+    let cat_iter = stmt.query_map([], |row| Ok(row.get(0)?)).unwrap();
+    let mut cats: Vec<String> = Vec::new();
+    for cat in cat_iter {
+        cats.push(cat.unwrap());
+    }
+    cats
+}

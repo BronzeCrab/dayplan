@@ -364,6 +364,7 @@ fn main() {
             stats::get_stats_4_bar,
             stats::get_stats_4_line,
             stats::get_stats_4_polar,
+            stats::get_categories_names_by_task_id,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

@@ -26,6 +26,7 @@ async function createCard(cardText, containerId, categoriesIds) {
 
   let newDiv = createNewDraggableDiv(card);
   appendDraggableToContainer(newDiv, containerId);
+  return card.id;
 }
 
 async function getPrevOrNextDate(dir) {
@@ -112,9 +113,12 @@ function handleModal() {
   taskCreateBtn.onclick = async function() {
     var taskCreateInput = document.getElementById("taskCreateInput");
     let categoriesIds = getSelectedCategoriesIds();
-    await createCard(taskCreateInput.value, modal.dataset.containerId, categoriesIds);
+    let createdCardId = await createCard(
+      taskCreateInput.value, modal.dataset.containerId, categoriesIds);
     await updateBarChart(modal.dataset.containerId, "+");
     await updateLineChart(modal.dataset.containerId, "+");
+    let categoriesNames = await getCategoriesNamesByTaskId(createdCardId);
+    updatePolarChart(categoriesNames, "+");
   }
   // When the user clicks on <span> (x), close the modal
   span.onclick = function() {
@@ -138,10 +142,14 @@ function handleTaskDelete() {
 async function addDeleteCardOnclick(delTaskBtn) {
   delTaskBtn.onclick = async function() {
     let graggable = delTaskBtn.parentNode;
+    // here we should get categories names before the
+    // delete, cause will not work after:
+    let categoriesNames = await getCategoriesNamesByTaskId(graggable.id);
     await deleteCard(graggable.id);
     let containerId = graggable.parentNode.id;
     await updateBarChart(containerId, "-");
     await updateLineChart(containerId, "-");
+    updatePolarChart(categoriesNames, "-");
     graggable.remove();
   }
 }
@@ -453,6 +461,37 @@ async function drawPolarChart() {
     options: {
     }
   });
+}
+
+async function getCategoriesNamesByTaskId(cardId) {
+  return await invoke(
+    'get_categories_names_by_task_id',
+    { cardId: parseInt(cardId) }).then((categoriesNames) => {
+      return categoriesNames;
+  });
+}
+
+function updatePolarChart(categoriesNames, flag) {
+  for (let i = 0; i < categoriesNames.length; i++) {
+    let categoryName = categoriesNames[i].toLowerCase().trim();
+    let categoryNameIndex = polarChart.data.labels.indexOf(categoryName);
+    if (categoryNameIndex === -1) {
+      console.assert(false, `ERROR: no such categoryName ${categoryName} in polarChart!`);
+    }
+    else {
+      if (flag === "+") {
+        polarChart.data.datasets[0].data[categoryNameIndex] += 1
+      }
+      else if (flag === "-") {
+        polarChart.data.datasets[0].data[categoryNameIndex] -= 1
+      }
+      else {
+        console.assert(false, `Error: strange flag in updatePolarChart, ${flag}`);
+      }
+    };
+  };
+
+  polarChart.update();
 }
 
 window.addEventListener("DOMContentLoaded", async () => {
