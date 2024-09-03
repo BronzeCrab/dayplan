@@ -418,6 +418,10 @@ async function setCategoriesOptions() {
   };
 };
 
+function getRandomInt() {
+  return Math.floor(Math.random() * 255);
+}
+
 async function drawPolarChart() {
   let stats = await invoke("get_stats_4_polar");
 
@@ -428,7 +432,10 @@ async function drawPolarChart() {
   for (let i = 0; i < stats.length; i++) {
     labels.push(stats[i]["name"]);
     adata.push(stats[i]["count"]);
-    backgroundColor.push("red");
+    let red = getRandomInt();
+    let green = getRandomInt();
+    let blue = getRandomInt();
+    backgroundColor.push(`rgb(${red}, ${green}, ${blue})`);
   }
 
   const ctx = document.getElementById('polarChart');
