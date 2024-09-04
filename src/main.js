@@ -391,22 +391,43 @@ async function updateLineChart(containerId, flag) {
     'get_container_status_by_id',
     { containerId: parseInt(containerId) }).then((containerStatus) => {
       let dateIndex;
+      let currDate = dateMsgEl.textContent.toLowerCase().trim();
+
+      // here we need to check if we added some card, but have no such
+      // date in LineChart:
+      if (!lineChart.data.labels.includes(currDate) && flag === "+") {
+        lineChart.data.labels.push(currDate);
+      }
+
       // first find labels index (right date):
       for (let i = 0; i < lineChart.data.labels.length; i++) {
-        if (lineChart.data.labels[i].toLowerCase() === dateMsgEl.textContent.toLowerCase()) {
+        if (lineChart.data.labels[i].toLowerCase().trim() === currDate) {
           dateIndex = i;
           break;
         };
       };
+
+      if (dateIndex === undefined) {
+        console.assert(
+          false,
+          `ERROR: something went very wrong in updateLineChart - dateIndex is ${dateIndex}`
+        );
+      }
+
       // then iterate over all datasets to find right status dataset:
       for (let j = 0; j < lineChart.data.datasets.length; j++) {
-        if (lineChart.data.datasets[j].label.toLowerCase() === containerStatus.toLowerCase()) {
-          if (flag === "+") {
+        if (lineChart.data.datasets[j].label.toLowerCase().trim() === containerStatus.toLowerCase().trim()) {
+          if (flag === "+" && lineChart.data.datasets[j].data.length > dateIndex) {
             lineChart.data.datasets[j].data[dateIndex] += 1;
-          } else if (flag === "-") {
+          } 
+          else if (flag === "+" && lineChart.data.datasets[j].data.length <= dateIndex) {
+            lineChart.data.datasets[j].data.push(1);
+          }
+          else if (flag === "-" && lineChart.data.datasets[j].data.length > dateIndex) {
             lineChart.data.datasets[j].data[dateIndex] -= 1;
-          } else {
-            console.assert(false, `Error: strange flag, ${flag}`);
+          } 
+          else {
+            console.assert(false, `Error: strange flag, ${flag} or flaw in logic`);
           }
           break;
         }
@@ -517,7 +538,7 @@ window.addEventListener("DOMContentLoaded", async () => {
   await drawBarChart();
   await drawLineChart();
   await drawPolarChart();
-
+  
 });
 
 
