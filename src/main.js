@@ -29,7 +29,7 @@ async function createCard(cardText, containerId, categoriesIds) {
   return card.id;
 }
 
-async function getPrevOrNextDate(dir) {
+async function getAndSetPrevOrNextDate(dir) {
   dateMsgEl.textContent = await invoke(
     "get_prev_or_next_date", { currentDateStr: dateMsgEl.textContent, dir: dir });
 }
@@ -243,14 +243,32 @@ function handleArrows() {
 
   // When the user clicks on this arrow, go back:
   leftArrow.onclick = async function() {
-    await getPrevOrNextDate("left");
+    await getAndSetPrevOrNextDate("left");
     await handleArrowClick();
+    if (lineChart !== undefined) {
+      lineChart.data.labels.unshift(dateMsgEl.textContent.toLowerCase().trim());
+      for (let i = 0; i < lineChart.data.datasets.length; i++) {
+        lineChart.data.datasets[i].data.unshift(0);
+      };
+    }
+    else {
+      console.assert(false, "ERROR: lineChart is undefined");
+    }
   }
 
   // When the user clicks on this arrow, go forward:
   rightArrow.onclick = async function() {
-    await getPrevOrNextDate("right");
+    await getAndSetPrevOrNextDate("right");
     await handleArrowClick();
+    if (lineChart !== undefined) {
+      lineChart.data.labels.push(dateMsgEl.textContent.toLowerCase().trim());
+      for (let i = 0; i < lineChart.data.datasets.length; i++) {
+        lineChart.data.datasets[i].data.push(0);
+      };
+    }
+    else {
+      console.assert(false, "ERROR: lineChart is undefined");
+    }
   }
 }
 
@@ -393,12 +411,6 @@ async function updateLineChart(containerId, flag) {
       let dateIndex;
       let currDate = dateMsgEl.textContent.toLowerCase().trim();
 
-      // here we need to check if we added some card, but have no such
-      // date in LineChart:
-      if (!lineChart.data.labels.includes(currDate) && flag === "+") {
-        lineChart.data.labels.push(currDate);
-      }
-
       // first find labels index (right date):
       for (let i = 0; i < lineChart.data.labels.length; i++) {
         if (lineChart.data.labels[i].toLowerCase().trim() === currDate) {
@@ -417,19 +429,21 @@ async function updateLineChart(containerId, flag) {
       // then iterate over all datasets to find right status dataset:
       for (let j = 0; j < lineChart.data.datasets.length; j++) {
         if (lineChart.data.datasets[j].label.toLowerCase().trim() === containerStatus.toLowerCase().trim()) {
-          if (flag === "+" && lineChart.data.datasets[j].data.length > dateIndex) {
-            lineChart.data.datasets[j].data[dateIndex] += 1;
-          } 
-          else if (flag === "+" && lineChart.data.datasets[j].data.length <= dateIndex) {
-            lineChart.data.datasets[j].data.push(1);
+          if (dateIndex >= lineChart.data.datasets[j].data.length) {
+            console.assert(false, `Error: dateIndex ${dateIndex} is >= then ${lineChart.data.datasets[j].data.length}`);
           }
-          else if (flag === "-" && lineChart.data.datasets[j].data.length > dateIndex) {
-            lineChart.data.datasets[j].data[dateIndex] -= 1;
-          } 
           else {
-            console.assert(false, `Error: strange flag, ${flag} or flaw in logic`);
+            if (flag === "+") {
+              lineChart.data.datasets[j].data[dateIndex] += 1;
+            } 
+            else if (flag === "-") {
+              lineChart.data.datasets[j].data[dateIndex] -= 1;
+            } 
+            else {
+              console.assert(false, `Error: strange flag, ${flag} or flaw in logic`);
+            }
+            break;
           }
-          break;
         }
       };
       lineChart.update();
