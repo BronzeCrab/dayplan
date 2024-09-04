@@ -237,6 +237,36 @@ async function handleArrowClick() {
   getCards(currentDate);
 }
 
+function prependToLineChart() {
+  if (lineChart !== undefined) {
+    let currDate = dateMsgEl.textContent.toLowerCase().trim();
+    if (!lineChart.data.labels.includes(currDate)) {
+      lineChart.data.labels.unshift(currDate);
+      for (let i = 0; i < lineChart.data.datasets.length; i++) {
+        lineChart.data.datasets[i].data.unshift(0);
+      };
+    };
+  }
+  else {
+    console.assert(false, "ERROR in prependToLineChart: lineChart is undefined");
+  }
+}
+
+function appendToLineChart() {
+  if (lineChart !== undefined) {
+    let currDate = dateMsgEl.textContent.toLowerCase().trim();
+    if (!lineChart.data.labels.includes(currDate)) {
+      lineChart.data.labels.push(currDate);
+      for (let i = 0; i < lineChart.data.datasets.length; i++) {
+        lineChart.data.datasets[i].data.push(0);
+      };
+    };
+  }
+  else {
+    console.assert(false, "ERROR in appendToLineChart: lineChart is undefined");
+  }
+}
+
 function handleArrows() {
   var leftArrow = document.getElementById("leftArrow");
   var rightArrow = document.getElementById("rightArrow");
@@ -245,30 +275,14 @@ function handleArrows() {
   leftArrow.onclick = async function() {
     await getAndSetPrevOrNextDate("left");
     await handleArrowClick();
-    if (lineChart !== undefined) {
-      lineChart.data.labels.unshift(dateMsgEl.textContent.toLowerCase().trim());
-      for (let i = 0; i < lineChart.data.datasets.length; i++) {
-        lineChart.data.datasets[i].data.unshift(0);
-      };
-    }
-    else {
-      console.assert(false, "ERROR: lineChart is undefined");
-    }
+    prependToLineChart();
   }
 
   // When the user clicks on this arrow, go forward:
   rightArrow.onclick = async function() {
     await getAndSetPrevOrNextDate("right");
     await handleArrowClick();
-    if (lineChart !== undefined) {
-      lineChart.data.labels.push(dateMsgEl.textContent.toLowerCase().trim());
-      for (let i = 0; i < lineChart.data.datasets.length; i++) {
-        lineChart.data.datasets[i].data.push(0);
-      };
-    }
-    else {
-      console.assert(false, "ERROR: lineChart is undefined");
-    }
+    appendToLineChart();
   }
 }
 
@@ -437,6 +451,12 @@ async function updateLineChart(containerId, flag) {
               lineChart.data.datasets[j].data[dateIndex] += 1;
             } 
             else if (flag === "-") {
+              if (lineChart.data.datasets[j].data[dateIndex] === 0) {
+                console.assert(
+                  false,
+                  `Error: this ${lineChart.data.datasets[j].data.label} array element with index ${dateIndex} is already 0! You are dumb`
+                );
+              }
               lineChart.data.datasets[j].data[dateIndex] -= 1;
             } 
             else {
