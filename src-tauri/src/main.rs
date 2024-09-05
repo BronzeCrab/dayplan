@@ -319,21 +319,6 @@ fn try_to_create_date_and_containers(current_date_str: &str) -> Vec<u32> {
     }
 }
 
-#[tauri::command]
-fn get_container_status_by_id(container_id: u32) -> String {
-    let conn = Connection::open(DB_PATH).unwrap();
-    let mut stmt = conn
-        .prepare(&format!(
-            "SELECT container.status FROM container
-            WHERE container.id = {container_id};"
-        ))
-        .unwrap();
-
-    let rows = stmt.query([]).unwrap();
-    let res: Vec<String> = rows.map(|r| r.get(0)).collect().unwrap();
-    res[0].clone()
-}
-
 fn main() {
     let conn = Connection::open(DB_PATH).unwrap();
 
@@ -359,11 +344,11 @@ fn main() {
             get_init_date,
             get_prev_or_next_date,
             try_to_create_date_and_containers,
-            get_container_status_by_id,
             get_categories,
             stats::get_stats_4_bar,
             stats::get_stats_4_line,
             stats::get_stats_4_polar,
+            stats::get_container_status_by_id,
             stats::get_categories_names_by_task_id,
         ])
         .run(tauri::generate_context!())

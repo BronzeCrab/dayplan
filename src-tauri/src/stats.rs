@@ -1,4 +1,5 @@
 use crate::models::{BarStats, LineStats, PolarStats};
+use fallible_iterator::FallibleIterator;
 use rusqlite::Connection;
 
 pub const DB_PATH: &str = "tasks.db";
@@ -118,4 +119,19 @@ pub fn get_categories_names_by_task_id(card_id: u32) -> Vec<String> {
         cats.push(cat.unwrap());
     }
     cats
+}
+
+#[tauri::command]
+pub fn get_container_status_by_id(container_id: u32) -> String {
+    let conn = Connection::open(DB_PATH).unwrap();
+    let mut stmt = conn
+        .prepare(&format!(
+            "SELECT container.status FROM container
+            WHERE container.id = {container_id};"
+        ))
+        .unwrap();
+
+    let rows = stmt.query([]).unwrap();
+    let res: Vec<String> = rows.map(|r| r.get(0)).collect().unwrap();
+    res[0].clone()
 }

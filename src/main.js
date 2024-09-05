@@ -382,7 +382,7 @@ async function drawLineChart() {
       labels.push(stats[i]["date"]);
     };
     for (let j = 0; j < datasets.length; j++) {
-      if (stats[i]["status"].toLowerCase() === datasets[j].label.toLowerCase()) {
+      if (stats[i]["status"].toLowerCase().trim() === datasets[j].label.toLowerCase().trim()) {
         datasets[j].data.push(stats[i]["count"]);
         break;
       }
