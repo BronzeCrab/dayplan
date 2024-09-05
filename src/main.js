@@ -332,7 +332,7 @@ async function updateBarChart(containerId, flag) {
     { containerId: parseInt(containerId) }).then((containerStatus) => {
       barChart.data.datasets.forEach((dataset) => {
         for (let i = 0; i < barChart.data.labels.length; i++) {
-          if (barChart.data.labels[i] === containerStatus) {
+          if (barChart.data.labels[i].toLowerCase().trim() === containerStatus.toLowerCase().trim()) {
             if (flag === "+") {
               dataset.data[i] += 1
             } else if (flag === "-") {
