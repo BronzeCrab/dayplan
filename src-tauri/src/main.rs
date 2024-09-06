@@ -3,18 +3,23 @@
 use std::usize;
 
 use rusqlite::{Connection, Error, Result};
+use std::fs::create_dir;
 mod models;
 use chrono::offset::Local;
 use chrono::{NaiveDate, TimeDelta};
 use fallible_iterator::FallibleIterator;
 use models::Task;
 mod stats;
-use stats::DB_PATH;
+use tauri::{Manager, State};
 
 #[tauri::command]
-fn update_card(card_id: u32, card_text: Option<&str>, new_container_id: Option<u32>) -> String {
-    let conn: Connection = Connection::open(DB_PATH).unwrap();
-
+fn update_card(
+    state: State<DbConnection>,
+    card_id: u32,
+    card_text: Option<&str>,
+    new_container_id: Option<u32>,
+) -> String {
+    let conn: &Connection = &state.db_conn;
     let sql_stmnt: &str = if card_text.is_some() {
         let txt: &str = card_text.unwrap();
         &format!("UPDATE task SET text = '{txt}' WHERE id = {card_id};")
@@ -28,9 +33,8 @@ fn update_card(card_id: u32, card_text: Option<&str>, new_container_id: Option<u
 }
 
 #[tauri::command]
-fn delete_card(card_id: u32) -> String {
-    let conn: Connection = Connection::open(DB_PATH).unwrap();
-
+fn delete_card(state: State<DbConnection>, card_id: u32) -> String {
+    let conn: &Connection = &state.db_conn;
     let _ = delete_task_categories_relations(&conn, card_id);
 
     conn.execute(
@@ -54,8 +58,13 @@ fn delete_task_categories_relations(conn: &Connection, task_id: u32) -> Result<(
 }
 
 #[tauri::command]
-fn create_card(card_text: String, container_id: u32, categories_ids: Vec<u32>) -> Task {
-    let conn = Connection::open(DB_PATH).unwrap();
+fn create_card(
+    state: State<DbConnection>,
+    card_text: String,
+    container_id: u32,
+    categories_ids: Vec<u32>,
+) -> Task {
+    let conn: &Connection = &state.db_conn;
     let mut stmt = conn
         .prepare(&format!(
             "INSERT INTO task (text, container_id) VALUES
@@ -215,8 +224,8 @@ fn try_to_create_db_tables(conn: &Connection) -> Result<(), Error> {
 }
 
 #[tauri::command]
-fn get_cards(current_date: String) -> Vec<Task> {
-    let conn = Connection::open(DB_PATH).unwrap();
+fn get_cards(state: State<DbConnection>, current_date: String) -> Vec<Task> {
+    let conn: &Connection = &state.db_conn;
     let mut stmt = conn
         .prepare(&format!(
             "SELECT task.id, task.text, container.status, task.container_id, daydate.date
@@ -262,8 +271,8 @@ fn get_containers_ids(conn: &Connection, current_date: &str) -> Vec<u32> {
 }
 
 #[tauri::command]
-fn get_categories() -> Vec<[String; 2]> {
-    let conn = Connection::open(DB_PATH).unwrap();
+fn get_categories(state: State<DbConnection>) -> Vec<[String; 2]> {
+    let conn: &Connection = &state.db_conn;
     let mut stmt = conn
         .prepare(&format!("SELECT category.id, category.name FROM category;"))
         .unwrap();
@@ -295,8 +304,11 @@ fn get_prev_or_next_date(current_date_str: &str, dir: &str) -> String {
 }
 
 #[tauri::command]
-fn try_to_create_date_and_containers(current_date_str: &str) -> Vec<u32> {
-    let conn: Connection = Connection::open(DB_PATH).unwrap();
+fn try_to_create_date_and_containers(
+    state: State<DbConnection>,
+    current_date_str: &str,
+) -> Vec<u32> {
+    let conn: &Connection = &state.db_conn;
     match create_daydate(&conn, current_date_str) {
         Ok(date_id) => match create_containers(&conn, date_id) {
             Ok(cont_ids) => {
@@ -319,23 +331,44 @@ fn try_to_create_date_and_containers(current_date_str: &str) -> Vec<u32> {
     }
 }
 
+struct DbConnection {
+    db_conn: Connection,
+}
+
+unsafe impl Sync for DbConnection {}
+
 fn main() {
-    let conn = Connection::open(DB_PATH).unwrap();
-
-    match try_to_create_db_tables(&conn) {
-        Ok(res) => println!("INFO: create db res: {:?}", res),
-        Err(error) => println!("ERROR: create db: {:?}", error),
-    };
-
-    match create_categories(&conn) {
-        Ok(res) => println!("INFO: create categories res: {:?}", res),
-        Err(error) => println!("ERROR: create categories - {:?}", error),
-    }
-
-    let today_date = Local::now().date_naive().to_string();
-    try_to_create_date_and_containers(&today_date);
-
     tauri::Builder::default()
+        .setup(|app| {
+            let appdir = app.handle().path_resolver().app_data_dir().unwrap();
+            println!("tauri setup, appdir is:");
+            println!("{:?}", appdir);
+
+            // create db folder:
+            let new_db_dir = appdir.join("databases");
+            match create_dir(&new_db_dir) {
+                Ok(res) => println!("{:?}, OK created dir: {:?}", res, new_db_dir),
+                Err(err) => println!("ERROR created dir: {:?}", err),
+            }
+
+            let path_to_db_file = new_db_dir.join("tasks.db");
+
+            let conn: Connection = Connection::open(path_to_db_file).unwrap();
+
+            match try_to_create_db_tables(&conn) {
+                Ok(res) => println!("INFO: create db res: {:?}", res),
+                Err(error) => println!("ERROR: create db: {:?}", error),
+            };
+
+            match create_categories(&conn) {
+                Ok(res) => println!("INFO: create categories res: {:?}", res),
+                Err(error) => println!("ERROR: create categories - {:?}", error),
+            }
+
+            app.manage(DbConnection { db_conn: conn });
+
+            Ok(())
+        })
         .invoke_handler(tauri::generate_handler![
             update_card,
             get_cards,

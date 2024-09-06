@@ -5,12 +5,16 @@
     "withGlobalTauri": true
   },
   "package": {
-    "productName": "tauri-app",
-    "version": "0.0.0"
+    "productName": "day-plan",
+    "version": "0.9.0"
   },
   "tauri": {
     "allowlist": {
       "all": false,
+      "fs": {
+        "all": true,
+        "scope": ["$APPDATA/databases/*"]
+      },
       "shell": {
         "all": false,
         "open": true
@@ -18,7 +22,7 @@
     },
     "windows": [
       {
-        "title": "tauri-app",
+        "title": "day-plan",
         "width": 800,
         "height": 600
       }

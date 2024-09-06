@@ -78,3 +78,7 @@ https://stackoverflow.com/questions/69764050/how-to-get-the-indices-that-would-s
 https://doc.rust-lang.org/std/primitive.slice.html#method.sort_by_key
 
 https://www.geeksforgeeks.org/relationships-in-sql-one-to-one-one-to-many-many-to-many/
+
+https://stackoverflow.com/questions/19605132/is-it-possible-to-use-global-variables-in-rust
+
+https://docs.rs/tauri/1.7.2/tauri/trait.Manager.html#method.manage

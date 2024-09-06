@@ -1,8 +1,8 @@
 use crate::models::{BarStats, LineStats, PolarStats};
+use crate::DbConnection;
+use crate::State;
 use fallible_iterator::FallibleIterator;
 use rusqlite::Connection;
-
-pub const DB_PATH: &str = "tasks.db";
 
 fn get_index_of_status(status: &str) -> u32 {
     match status {
@@ -14,8 +14,8 @@ fn get_index_of_status(status: &str) -> u32 {
 }
 
 #[tauri::command]
-pub fn get_stats_4_bar() -> Vec<BarStats> {
-    let conn = Connection::open(DB_PATH).unwrap();
+pub fn get_stats_4_bar(state: State<DbConnection>) -> Vec<BarStats> {
+    let conn: &Connection = &state.db_conn;
     let mut stmt = conn
         .prepare(&format!(
             "SELECT COUNT(task.id), container.status
@@ -44,8 +44,8 @@ pub fn get_stats_4_bar() -> Vec<BarStats> {
 }
 
 #[tauri::command]
-pub fn get_stats_4_line() -> Vec<LineStats> {
-    let conn = Connection::open(DB_PATH).unwrap();
+pub fn get_stats_4_line(state: State<DbConnection>) -> Vec<LineStats> {
+    let conn: &Connection = &state.db_conn;
     let mut stmt = conn
         .prepare(&format!(
             "SELECT COUNT(task.id), container.status, daydate.date
@@ -74,8 +74,8 @@ pub fn get_stats_4_line() -> Vec<LineStats> {
 }
 
 #[tauri::command]
-pub fn get_stats_4_polar() -> Vec<PolarStats> {
-    let conn = Connection::open(DB_PATH).unwrap();
+pub fn get_stats_4_polar(state: State<DbConnection>) -> Vec<PolarStats> {
+    let conn: &Connection = &state.db_conn;
     let mut stmt = conn
         .prepare(&format!(
             "SELECT COUNT(task.id), category.name
@@ -102,8 +102,8 @@ pub fn get_stats_4_polar() -> Vec<PolarStats> {
 }
 
 #[tauri::command]
-pub fn get_categories_names_by_task_id(card_id: u32) -> Vec<String> {
-    let conn = Connection::open(DB_PATH).unwrap();
+pub fn get_categories_names_by_task_id(state: State<DbConnection>, card_id: u32) -> Vec<String> {
+    let conn: &Connection = &state.db_conn;
     let mut stmt = conn
         .prepare(&format!(
             "SELECT category.name
@@ -122,8 +122,8 @@ pub fn get_categories_names_by_task_id(card_id: u32) -> Vec<String> {
 }
 
 #[tauri::command]
-pub fn get_container_status_by_id(container_id: u32) -> String {
-    let conn = Connection::open(DB_PATH).unwrap();
+pub fn get_container_status_by_id(state: State<DbConnection>, container_id: u32) -> String {
+    let conn: &Connection = &state.db_conn;
     let mut stmt = conn
         .prepare(&format!(
             "SELECT container.status FROM container
