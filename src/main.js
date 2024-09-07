@@ -545,6 +545,10 @@ function updatePolarChart(categoriesNames, flag) {
     else if (categoryNameIndex === -1 && flag === "+") {
       polarChart.data.labels.push(categoryName);
       polarChart.data.datasets[0].data.push(1);
+      let red = getRandomInt();
+      let green = getRandomInt();
+      let blue = getRandomInt();
+      polarChart.data.datasets[0].backgroundColor.push(`rgb(${red}, ${green}, ${blue})`);
     }
     else {
       if (flag === "+") {
