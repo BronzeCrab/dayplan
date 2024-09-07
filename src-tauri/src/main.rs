@@ -344,6 +344,12 @@ fn main() {
             println!("tauri setup, appdir is:");
             println!("{:?}", appdir);
 
+            // create app folder:
+            match create_dir(&appdir) {
+                Ok(res) => println!("{:?}, OK created dir: {:?}", res, appdir),
+                Err(err) => println!("ERROR created dir: {:?}, path: {:?}", err, appdir),
+            }
+
             // create db folder:
             let new_db_dir = appdir.join("databases");
             match create_dir(&new_db_dir) {
