@@ -348,7 +348,7 @@ fn main() {
             let new_db_dir = appdir.join("databases");
             match create_dir(&new_db_dir) {
                 Ok(res) => println!("{:?}, OK created dir: {:?}", res, new_db_dir),
-                Err(err) => println!("ERROR created dir: {:?}", err),
+                Err(err) => println!("ERROR created dir: {:?}, path: {:?}", err, new_db_dir),
             }
 
             let path_to_db_file = new_db_dir.join("tasks.db");
