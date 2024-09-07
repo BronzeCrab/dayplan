@@ -35,13 +35,18 @@ async function getAndSetPrevOrNextDate(dir) {
 }
 
 function createNewDraggableDiv(card) {
+  // create draggable div itself:
   const newDiv = document.createElement("div");
   newDiv.setAttribute("id", card.id);
   newDiv.setAttribute("class", "draggable");
   newDiv.setAttribute("draggable", "true");
   newDiv.setAttribute("contenteditable", true);
-  newDiv.setAttribute("style", "border: solid magenta; width:100px;");
-  newDiv.innerHTML = card.text
+  newDiv.setAttribute("style", "border: solid magenta;");
+
+  // create inner p with text:
+  const newP = document.createElement("p");
+  newP.innerHTML = card.text
+  newDiv.appendChild(newP);
 
   // Creating delete btn for this new card:
   const newDelTaskBtn = document.createElement("button");
@@ -198,7 +203,7 @@ function addDraggableEventListeners(draggable) {
   });
   draggable.addEventListener("input", async function() {
     console.assert(
-      draggable.childNodes[0].nodeType === Node.TEXT_NODE, "nodeType should be TEXT");
+      draggable.childNodes[0].nodeType === Node.ELEMENT_NODE, "nodeType should be ELEMENT");
     await updateCard(draggable.id, draggable.childNodes[0].textContent, null);
   });
 }

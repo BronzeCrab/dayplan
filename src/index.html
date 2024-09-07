@@ -15,8 +15,10 @@
     <h1>Welcome to DayPlan!</h1>
 
     <p id="date-msg"></p>
-    <i class="fa-solid fa-arrow-left" id="leftArrow"></i>
-    <i class="fa-solid fa-arrow-right" id="rightArrow"></i>
+    <div class="arrow">
+      <i class="fa-solid fa-arrow-left" id="leftArrow"></i>
+      <i class="fa-solid fa-arrow-right" id="rightArrow"></i>
+    </div>
 
     <div id="myModal" class="modal" data-container-id="">
       <div class="modal-content">
@@ -29,15 +31,18 @@
       </div>
     </div>
 
-    <div class="container" style="border: solid red; width:500px;">
-      <button class="openModalBtn">Open Modal</button>
-    </div>
-    <div class="container" style="border: solid grey; margin-top: 50px; width:500px;">
-      <button class="openModalBtn">Open Modal</button>
-    </div>
-    <div class="container" style="border: solid green; margin-top: 50px; width:500px;">
-      <button class="openModalBtn">Open Modal</button>
-    </div>
+    <section>
+      <div class="container" style="border: solid red;">
+        <button class="openModalBtn">Open Modal</button>
+      </div>
+      <div class="container" style="border: solid grey;">
+        <button class="openModalBtn">Open Modal</button>
+      </div>
+      <div class="container" style="border: solid green;">
+        <button class="openModalBtn">Open Modal</button>
+      </div>
+    </section>
+
 
     <br>
     <hr>

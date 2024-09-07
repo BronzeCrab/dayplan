@@ -82,3 +82,7 @@ https://www.geeksforgeeks.org/relationships-in-sql-one-to-one-one-to-many-many-t
 https://stackoverflow.com/questions/19605132/is-it-possible-to-use-global-variables-in-rust
 
 https://docs.rs/tauri/1.7.2/tauri/trait.Manager.html#method.manage
+
+https://developer.mozilla.org/en-US/docs/Learn/CSS/CSS_layout/Flexbox
+
+https://stackoverflow.com/questions/20626685/how-do-i-set-distance-between-flexbox-items
