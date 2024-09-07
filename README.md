@@ -86,3 +86,7 @@ https://docs.rs/tauri/1.7.2/tauri/trait.Manager.html#method.manage
 https://developer.mozilla.org/en-US/docs/Learn/CSS/CSS_layout/Flexbox
 
 https://stackoverflow.com/questions/20626685/how-do-i-set-distance-between-flexbox-items
+
+Issue with drag and drop on Windows:
+
+https://github.com/tauri-apps/tauri/issues/6695

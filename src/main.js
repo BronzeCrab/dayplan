@@ -383,8 +383,9 @@ async function drawLineChart() {
 
   let labels = [];
   for (let i = 0; i < stats.length; i++) {
-    if (!labels.includes(stats[i]["date"])) {
-      labels.push(stats[i]["date"]);
+    let someCurrDate = stats[i]["date"].toLowerCase().trim();
+    if (!labels.includes(someCurrDate)) {
+      labels.push(someCurrDate);
     };
     for (let j = 0; j < datasets.length; j++) {
       if (stats[i]["status"].toLowerCase().trim() === datasets[j].label.toLowerCase().trim()) {
