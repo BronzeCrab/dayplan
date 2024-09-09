@@ -63,7 +63,10 @@ fn create_card(
     card_text: String,
     container_id: u32,
     categories_ids: Vec<u32>,
-) -> Task {
+) -> Result<Task, &str> {
+    if card_text.trim() == "" {
+        return Err("ERROR: cant create card with empty text!");
+    };
     let conn: &Connection = &state.db_conn;
     let mut stmt = conn
         .prepare(&format!(
@@ -83,13 +86,13 @@ fn create_card(
     let task_id: u32 = res[0];
     let _ = create_task_categories_relations(&conn, task_id, categories_ids);
 
-    Task {
+    Ok(Task {
         id: task_id,
         text: card_text,
         status: "".to_string(),
         container_id: container_id,
         date: "".to_string(),
-    }
+    })
 }
 
 fn create_task_categories_relations(

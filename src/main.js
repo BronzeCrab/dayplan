@@ -17,10 +17,21 @@ async function deleteCard(cardId) {
 
 async function createCard(cardText, containerId, categoriesIds) {
   containerId = parseInt(containerId);
-  let card = await invoke(
+  let card;
+
+  await invoke(
     "create_card", 
     { cardText: cardText, containerId: containerId, categoriesIds: categoriesIds }
-  );
+  ).then(function(createdCard) {
+    card = createdCard;
+  })
+  .catch(function(rej) {
+    console.log(rej);
+  });
+
+  if (card === undefined) {
+    return;
+  }
 
   console.assert(card.container_id === containerId, "error card.containerId != containerId");
 
@@ -50,8 +61,8 @@ function createNewDraggableDiv(card) {
 
   // Creating delete btn for this new card:
   const newDelTaskBtn = document.createElement("button");
-  newDelTaskBtn.setAttribute("class", "delTaskBtn");
-  newDelTaskBtn.innerHTML = "Delete task";
+  newDelTaskBtn.setAttribute("class", "fa-solid fa-trash delTaskBtn");
+  newDelTaskBtn.setAttribute("contenteditable", false);
   addDeleteCardOnclick(newDelTaskBtn);
   newDiv.appendChild(newDelTaskBtn);
 
@@ -118,12 +129,19 @@ function handleModal() {
   taskCreateBtn.onclick = async function() {
     var taskCreateInput = document.getElementById("taskCreateInput");
     let categoriesIds = getSelectedCategoriesIds();
-    let createdCardId = await createCard(
+    let createdCardRes = await createCard(
       taskCreateInput.value, modal.dataset.containerId, categoriesIds);
-    await updateBarChart(modal.dataset.containerId, "+");
-    await updateLineChart(modal.dataset.containerId, "+");
-    let categoriesNames = await getCategoriesNamesByTaskId(createdCardId);
-    updatePolarChart(categoriesNames, "+");
+    if (createdCardRes !== undefined) {
+      console.assert(
+        Number.isInteger(createdCardRes),
+        `ERROR: createdCardRes: ${createdCardRes} is not int!`
+      );
+      await updateBarChart(modal.dataset.containerId, "+");
+      await updateLineChart(modal.dataset.containerId, "+");
+      let createdCardId = createdCardRes;
+      let categoriesNames = await getCategoriesNamesByTaskId(createdCardId);
+      updatePolarChart(categoriesNames, "+");
+    }
   }
   // When the user clicks on <span> (x), close the modal
   span.onclick = function() {
