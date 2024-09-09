@@ -3,11 +3,13 @@
 It's free trello-like task tracker for everyday with drag-n-drop,
 written in `js` and `rust`(`tauri`). With some statistics made with `Chart.js`.
 
-## How to run for dev:
+## How to add tauri-cli to yarn:
 
-```bash
+```sh
 yarn add @tauri-apps/cli
 ```
+
+## How to run for dev:
 
 ```bash
 cd src-tauri
