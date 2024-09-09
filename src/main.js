@@ -113,8 +113,8 @@ function handleModal() {
   var openModalBtns = document.getElementsByClassName("openModalBtn");
   // Get the button that creates the task in modal
   var taskCreateBtn = document.getElementById("taskCreateBtn");
-  // Get the <span> element that closes the modal
-  var span = document.getElementsByClassName("close")[0];
+  // Get the <i> element that closes the modal
+  var iconClose = document.getElementsByClassName("close")[0];
 
   // When the user clicks on this buttons, open the modal
   // user clicked on specific btn in specific container, so
@@ -143,8 +143,8 @@ function handleModal() {
       updatePolarChart(categoriesNames, "+");
     }
   }
-  // When the user clicks on <span> (x), close the modal
-  span.onclick = function() {
+  // When the user clicks on (x), close the modal
+  iconClose.onclick = function() {
     modal.style.display = "none";
   }
   // When the user clicks anywhere outside of the modal, close it
