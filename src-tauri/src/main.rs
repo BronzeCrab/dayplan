@@ -8,7 +8,7 @@ mod models;
 use chrono::offset::Local;
 use chrono::{NaiveDate, TimeDelta};
 use fallible_iterator::FallibleIterator;
-use models::Task;
+use models::{Container, Task};
 mod stats;
 use tauri::{Manager, State};
 
@@ -127,22 +127,31 @@ fn create_daydate(conn: &Connection, date: &str) -> Result<u32, Error> {
     }
 }
 
-fn create_containers(conn: &Connection, date_id: u32) -> Result<Vec<u32>, Error> {
-    let mut cont_ids: Vec<u32> = Vec::new();
+fn create_containers(conn: &Connection, date_id: u32) -> Result<Vec<Container>, Error> {
+    let mut containers: Vec<Container> = Vec::new();
     let statuses = ["todo", "doing", "done"];
     for status in statuses {
         let mut stmt = conn
             .prepare(&format!(
                 "INSERT INTO container (status, date_id) VALUES ('{status}', '{date_id}') 
-            RETURNING container.id;"
+            RETURNING container.id, container.status, container.date_id;"
             ))
             .unwrap();
 
-        let rows = stmt.query([]).unwrap();
-        let res: Vec<u32> = rows.map(|r| r.get(0)).collect().unwrap();
-        cont_ids.push(res[0]);
+        let cont_iter = stmt
+            .query_map([], |row| {
+                Ok(Container {
+                    id: row.get(0)?,
+                    status: row.get(1)?,
+                    date_id: row.get(2)?,
+                })
+            })
+            .unwrap();
+        for cont in cont_iter {
+            containers.push(cont.unwrap());
+        }
     }
-    Ok(cont_ids)
+    Ok(containers)
 }
 
 fn create_categories(conn: &Connection) -> Result<Vec<u32>, Error> {
@@ -256,21 +265,29 @@ fn get_cards(state: State<DbConnection>, current_date: String) -> Vec<Task> {
     tasks
 }
 
-fn get_containers_ids(conn: &Connection, current_date: &str) -> Vec<u32> {
+fn get_containers(conn: &Connection, current_date: &str) -> Vec<Container> {
     let mut stmt = conn
         .prepare(&format!(
-            "SELECT container.id
+            "SELECT container.id, container.status, container.date_id
             FROM container
             INNER JOIN daydate ON container.date_id = daydate.id
             WHERE daydate.date = '{current_date}';"
         ))
         .unwrap();
-    let cont_id_iter = stmt.query_map([], |row| Ok(row.get(0)?)).unwrap();
-    let mut conteiner_ids: Vec<u32> = Vec::new();
-    for cont_id in cont_id_iter {
-        conteiner_ids.push(cont_id.unwrap());
+    let cont_iter = stmt
+        .query_map([], |row| {
+            Ok(Container {
+                id: row.get(0)?,
+                status: row.get(1)?,
+                date_id: row.get(2)?,
+            })
+        })
+        .unwrap();
+    let mut containers: Vec<Container> = Vec::new();
+    for cont in cont_iter {
+        containers.push(cont.unwrap());
     }
-    conteiner_ids
+    containers
 }
 
 #[tauri::command]
@@ -310,13 +327,13 @@ fn get_prev_or_next_date(current_date_str: &str, dir: &str) -> String {
 fn try_to_create_date_and_containers(
     state: State<DbConnection>,
     current_date_str: &str,
-) -> Vec<u32> {
+) -> Vec<Container> {
     let conn: &Connection = &state.db_conn;
     match create_daydate(&conn, current_date_str) {
         Ok(date_id) => match create_containers(&conn, date_id) {
-            Ok(cont_ids) => {
-                println!("INFO: ok of create date containers. Res: {:?}", cont_ids);
-                cont_ids
+            Ok(containers) => {
+                println!("INFO: ok of create date containers. Res: {:?}", containers);
+                containers
             }
             Err(error) => {
                 println!(
@@ -329,7 +346,7 @@ fn try_to_create_date_and_containers(
         Err(error) => {
             println!("ERROR: create date: {:?}", error);
             // in this case, we should just get containers ids of current_date:
-            get_containers_ids(&conn, current_date_str)
+            get_containers(&conn, current_date_str)
         }
     }
 }

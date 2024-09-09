@@ -10,6 +10,13 @@ pub struct Task {
 }
 
 #[derive(Debug, Serialize)]
+pub struct Container {
+    pub id: u32,
+    pub status: String,
+    pub date_id: u32,
+}
+
+#[derive(Debug, Serialize)]
 pub struct BarStats {
     pub count: u32,
     pub status: String,

@@ -14,8 +14,13 @@
   -webkit-text-size-adjust: 100%;
 }
 
-h1, h3, #date-msg {
+h1, h3, h5, #date-msg {
   text-align: center;
+}
+
+h5 {
+margin-block-start: 0.3rem;
+margin-block-end: 0.3rem;
 }
 
 #leftArrow, #rightArrow {

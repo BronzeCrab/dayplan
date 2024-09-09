@@ -60,11 +60,11 @@ function createNewDraggableDiv(card) {
   newDiv.appendChild(newP);
 
   // Creating delete btn for this new card:
-  const newDelTaskBtn = document.createElement("button");
-  newDelTaskBtn.setAttribute("class", "fa-solid fa-trash delTaskBtn");
-  newDelTaskBtn.setAttribute("contenteditable", false);
-  addDeleteCardOnclick(newDelTaskBtn);
-  newDiv.appendChild(newDelTaskBtn);
+  const newDelTaskI = document.createElement("i");
+  newDelTaskI.setAttribute("class", "fa-solid fa-trash delTaskBtn");
+  newDelTaskI.setAttribute("contenteditable", false);
+  addDeleteCardOnclick(newDelTaskI);
+  newDiv.appendChild(newDelTaskI);
 
   addDraggableEventListeners(newDiv);
   return newDiv;
@@ -234,20 +234,26 @@ function clearAllDraggableDivs() {
   }
 }
 
-async function getAndSetContainersIds(currentDate) {
+async function getAndSetContainersIdsAndNames(currentDate) {
   await invoke(
     'try_to_create_date_and_containers',
-    { currentDateStr: currentDate }).then((containers_ids) => {
-      if (containers_ids.length > 0) {
+    { currentDateStr: currentDate }).then((containersFromRust) => {
+      if (containersFromRust.length > 0) {
         let containers = document.getElementsByClassName("container");
-        console.assert(containers_ids.length === 3, "containers_ids.length should be 3");
+        console.assert(containers.length === 3, "containers.length should be 3");
         console.assert(
-          containers_ids.length === containers.length,
-          "containers_ids.length should be === containers.length"
+          containersFromRust.length === containers.length,
+          "containersFromRust.length should be === containers.length"
         );
-        // replace containers id's:
-        for (let i = 0; i < containers.length; i++) {
-          containers[i].id = containers_ids[i];
+
+        // replace containers id's and name:
+        for (let i = 0; i < containersFromRust.length; i++) {
+          containers[i].id = containersFromRust[i].id;
+          console.assert(
+            containers[i].childNodes[1].nodeType === Node.ELEMENT_NODE,
+            "ERROR: wrong node type in container"
+          );
+          containers[i].childNodes[1].innerHTML = containersFromRust[i].status;
         }
       }
   });
@@ -256,7 +262,7 @@ async function getAndSetContainersIds(currentDate) {
 async function handleArrowClick() {
   clearAllDraggableDivs();
   let currentDate = dateMsgEl.textContent;
-  await getAndSetContainersIds(currentDate);
+  await getAndSetContainersIdsAndNames(currentDate);
   getCards(currentDate);
 }
 
@@ -589,7 +595,7 @@ window.addEventListener("DOMContentLoaded", async () => {
   dateMsgEl = document.querySelector("#date-msg");
 
   await initGetDate();
-  await getAndSetContainersIds(dateMsgEl.textContent);
+  await getAndSetContainersIdsAndNames(dateMsgEl.textContent);
   await getCards(dateMsgEl.textContent);
   handleTaskDelete();
   handleModal();
