@@ -149,6 +149,11 @@ function addCreateOrEditCardOnClick(taskCreateOrEditBtn, modal) {
       let foundDraggable = false;
       for (let i = 0; i < draggables.length; i++) {
         if (parseInt(draggables[i].id) === parseInt(modal.dataset.editedTaskId)) {
+          // here check if first child if this draggable is indeed ELEMENT_NODE:
+          console.assert(
+            draggables[i].childNodes[0].nodeType === Node.ELEMENT_NODE,
+            `ERROR: wrong ${draggables[i].childNodes[0]} nodeType: ${draggables[i].childNodes[0].nodeType}`
+          )
           draggables[i].childNodes[0].innerHTML = taskCreateInput.value;
           foundDraggable = true;
           break;
@@ -253,6 +258,11 @@ async function addEditCardOnclick(editTaskI) {
 
     // get current draggable:
     let graggable = editTaskI.parentNode;
+    // first child of draggable should be <p> tag - ELEMENT_NODE:
+    console.assert(
+      graggable.childNodes[0].nodeType === Node.ELEMENT_NODE,
+      `ERROR: type of first child of draggable should be ELEMENT_NODE, got ${graggable.childNodes[0].nodeType}`
+    );
     // this is text of card, we need to set it to modal textarea:
     let cardTxt = graggable.childNodes[0].innerHTML;
     var taskCreateInput = document.getElementById("taskCreateInput");
