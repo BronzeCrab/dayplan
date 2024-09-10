@@ -18,6 +18,7 @@ fn update_card(
     card_id: u32,
     card_text: Option<&str>,
     new_container_id: Option<u32>,
+    new_categories_ids: Option<Vec<u32>>,
 ) -> String {
     let conn: &Connection = &state.db_conn;
     let sql_stmnt: &str = if card_text.is_some() {
@@ -27,6 +28,11 @@ fn update_card(
         let cont_id: u32 = new_container_id.unwrap();
         &format!("UPDATE task SET container_id = {cont_id} WHERE id = {card_id};")
     };
+
+    if new_categories_ids.is_some() {
+        let _ = delete_task_categories_relations(conn, card_id);
+        let _ = create_task_categories_relations(conn, card_id, new_categories_ids.unwrap());
+    }
 
     conn.execute(sql_stmnt, ()).unwrap();
     format!("Hello, from update_card! card_id={}", card_id)

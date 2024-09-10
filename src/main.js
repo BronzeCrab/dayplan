@@ -5,10 +5,16 @@ let barChart;
 let lineChart;
 let polarChart;
 
-async function updateCard(cardId, cardText, newContainerId) {
+async function updateCard(cardId, cardText, newContainerId, newCategoriesIds) {
   await invoke(
     "update_card", 
-    {cardId: parseInt(cardId), cardText: cardText, newContainerId: parseInt(newContainerId) });
+    {
+      cardId: parseInt(cardId),
+      cardText: cardText,
+      newContainerId: parseInt(newContainerId),
+      newCategoriesIds: newCategoriesIds 
+    }
+  );
 }
 
 async function deleteCard(cardId) {
@@ -59,6 +65,13 @@ function createNewDraggableDiv(card) {
   newP.innerHTML = card.text
   newDiv.appendChild(newP);
 
+  // creating edit btn:
+  const newEditTaskI = document.createElement("i");
+  newEditTaskI.setAttribute("class", "fa-solid fa-pen-to-square editTaskBtn");
+  newEditTaskI.setAttribute("contenteditable", false);
+  addEditCardOnclick(newEditTaskI);
+  newDiv.appendChild(newEditTaskI);
+
   // Creating delete btn for this new card:
   const newDelTaskI = document.createElement("i");
   newDelTaskI.setAttribute("class", "fa-solid fa-trash delTaskBtn");
@@ -106,47 +119,99 @@ function getSelectedCategoriesIds() {
   return categoriesIds;
 }
 
+// Add create or edit btn on click handler inside modal:
+function addCreateOrEditCardOnClick(taskCreateOrEditBtn, modal) {
+  // When the user clicks on this button, create task in db:
+  taskCreateOrEditBtn.onclick = async function() {
+    var taskCreateInput = document.getElementById("taskCreateInput");
+    let categoriesIds = getSelectedCategoriesIds();
+    if (modal.dataset.flag === "create") {
+      let createdCardRes = await createCard(
+        taskCreateInput.value, modal.dataset.containerId, categoriesIds);
+      if (createdCardRes !== undefined) {
+        console.assert(
+          Number.isInteger(createdCardRes),
+          `ERROR: createdCardRes: ${createdCardRes} is not int!`
+        );
+        await updateBarChart(modal.dataset.containerId, "+");
+        await updateLineChart(modal.dataset.containerId, "+");
+        let createdCardId = createdCardRes;
+        let categoriesNames = await getCategoriesNamesByTaskId(createdCardId);
+        updatePolarChart(categoriesNames, "+");
+      }
+    }
+    else if (modal.dataset.flag === "edit") {
+      await updateCard(
+        modal.dataset.editedTaskId, taskCreateInput.value, null, categoriesIds);
+
+      // here we need to update card text:
+      var draggables = document.getElementsByClassName('draggable');
+      let foundDraggable = false;
+      for (let i = 0; i < draggables.length; i++) {
+        if (parseInt(draggables[i].id) === parseInt(modal.dataset.editedTaskId)) {
+          draggables[i].childNodes[0].innerHTML = taskCreateInput.value;
+          foundDraggable = true;
+          break;
+        }
+      }
+      if (foundDraggable === false) {
+        console.assert(
+          false,
+          `ERROR: cant find draggable in update with id: ${modal.dataset.editedTaskId}`
+        );
+      }
+
+      // here we need to restore array from string:
+      let cetegoriesNamesBeforeEdit = modal.dataset.cetegoriesNamesBeforeEdit.split(',');
+      updatePolarChart(cetegoriesNamesBeforeEdit, "-");
+      let newCategoriesNames = await getCategoriesNamesByTaskId(modal.dataset.editedTaskId);
+      updatePolarChart(newCategoriesNames, "+");
+    }
+    else {
+      console.assert(false, `ERROR: unknown modal flag: ${modal.dataset.flag}`)
+    }
+  }
+}
+
 function handleModal() {
   // Get the modal
   var modal = document.getElementById("myModal");
-  // Get all the buttons that opens the modal
-  var openModalBtns = document.getElementsByClassName("openModalBtn");
+  // Get all the buttons that opens the modal to create a card:
+  var openModalCreateBtns = document.getElementsByClassName("openModalCreateBtn");
   // Get the button that creates the task in modal
-  var taskCreateBtn = document.getElementById("taskCreateBtn");
+  var taskCreateOrEditBtn = document.getElementById("taskCreateOrEditBtn");
   // Get the <i> element that closes the modal
   var iconClose = document.getElementsByClassName("close")[0];
 
   // When the user clicks on this buttons, open the modal
   // user clicked on specific btn in specific container, so
   // just set current param to modal.dataset:
-  for (let i = 0; i < openModalBtns.length; i++) {
-    openModalBtns[i].onclick = function() {
+  for (let i = 0; i < openModalCreateBtns.length; i++) {
+    openModalCreateBtns[i].onclick = function() {
+      taskCreateOrEditBtn.innerHTML = "create card".toLowerCase().trim();
+      var taskCreateInput = document.getElementById("taskCreateInput");
+      taskCreateInput.value = "";
+
+      // here we need also to de-select all categories options:
+      let catSelectEl = document.getElementById("categoriesSel");
+      let chilsOfSelect = catSelectEl.childNodes;
+      for (let i = 0; i < chilsOfSelect.length; i++) {
+        chilsOfSelect[i].selected = false;
+      } 
+
+      modal.dataset.containerId = openModalCreateBtns[i].parentNode.id;
+      modal.dataset.flag = "create";
       modal.style.display = "block";
-      modal.dataset.containerId = openModalBtns[i].parentNode.id;
     }
   }
-  // When the user clicks on this button, create task in db:
-  taskCreateBtn.onclick = async function() {
-    var taskCreateInput = document.getElementById("taskCreateInput");
-    let categoriesIds = getSelectedCategoriesIds();
-    let createdCardRes = await createCard(
-      taskCreateInput.value, modal.dataset.containerId, categoriesIds);
-    if (createdCardRes !== undefined) {
-      console.assert(
-        Number.isInteger(createdCardRes),
-        `ERROR: createdCardRes: ${createdCardRes} is not int!`
-      );
-      await updateBarChart(modal.dataset.containerId, "+");
-      await updateLineChart(modal.dataset.containerId, "+");
-      let createdCardId = createdCardRes;
-      let categoriesNames = await getCategoriesNamesByTaskId(createdCardId);
-      updatePolarChart(categoriesNames, "+");
-    }
-  }
+
+  addCreateOrEditCardOnClick(taskCreateOrEditBtn, modal);
+
   // When the user clicks on (x), close the modal
   iconClose.onclick = function() {
     modal.style.display = "none";
   }
+
   // When the user clicks anywhere outside of the modal, close it
   window.onclick = function(event) {
     if (event.target == modal) {
@@ -155,6 +220,7 @@ function handleModal() {
   } 
 }
 
+// add delete onclick to all delTaskBtn:
 function handleTaskDelete() {
   const delTaskBtns = document.querySelectorAll(".delTaskBtn");
   delTaskBtns.forEach(async delTaskBtn => {
@@ -162,6 +228,7 @@ function handleTaskDelete() {
   });
 }
 
+// delete btn in draggable:
 async function addDeleteCardOnclick(delTaskBtn) {
   delTaskBtn.onclick = async function() {
     let graggable = delTaskBtn.parentNode;
@@ -174,6 +241,45 @@ async function addDeleteCardOnclick(delTaskBtn) {
     await updateLineChart(containerId, "-");
     updatePolarChart(categoriesNames, "-");
     graggable.remove();
+  }
+}
+
+// edit btn in draggable:
+async function addEditCardOnclick(editTaskI) {
+  editTaskI.onclick = async function() {
+    // we need to change some data in modal:
+    var taskCreateOrEditBtn = document.getElementById("taskCreateOrEditBtn");
+    taskCreateOrEditBtn.innerHTML = "update card".toLowerCase().trim();
+
+    // get current draggable:
+    let graggable = editTaskI.parentNode;
+    // this is text of card, we need to set it to modal textarea:
+    let cardTxt = graggable.childNodes[0].innerHTML;
+    var taskCreateInput = document.getElementById("taskCreateInput");
+    taskCreateInput.value = cardTxt;
+
+    // we also need to get categories names by card_id:
+    let categoriesNames = await getCategoriesNamesByTaskId(graggable.id);
+    // here we need also to re-select all categories options:
+    let catSelectEl = document.getElementById("categoriesSel");
+    let chilsOfSelect = catSelectEl.childNodes;
+    for (let i = 0; i < chilsOfSelect.length; i++) {
+      let aNode = chilsOfSelect[i];
+      if (aNode.nodeType === Node.ELEMENT_NODE) {
+        if (categoriesNames.includes(aNode.innerHTML.trim().toLowerCase())) {
+          aNode.selected = true;
+        }
+        else {
+          aNode.selected = false;
+        }
+      }
+    } 
+
+    var modal = document.getElementById("myModal");
+    modal.dataset.editedTaskId = graggable.id;
+    modal.dataset.cetegoriesNamesBeforeEdit = categoriesNames;
+    modal.dataset.flag = "edit";
+    modal.style.display = "block";
   }
 }
 
@@ -197,7 +303,7 @@ function handleDragging() {
       draggedElement.parentNode.removeChild(draggedElement);
       container.appendChild(draggedElement);
       // Then we need to change container_id to new one:
-      await updateCard(draggedElement.id, null, container.id);
+      await updateCard(draggedElement.id, null, container.id, null);
       // remove card from this bar in chart:
       await updateBarChart(removedFromContainerId, "-");
       // add card for this bar in chart:
@@ -222,7 +328,7 @@ function addDraggableEventListeners(draggable) {
   draggable.addEventListener("input", async function() {
     console.assert(
       draggable.childNodes[0].nodeType === Node.ELEMENT_NODE, "nodeType should be ELEMENT");
-    await updateCard(draggable.id, draggable.childNodes[0].textContent, null);
+    await updateCard(draggable.id, draggable.childNodes[0].textContent, null, null);
   });
 }
 

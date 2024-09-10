@@ -88,9 +88,13 @@ section {
   flex: 1;
 }
 
-#taskCreateBtn {
+#taskCreateOrEditBtn {
   flex: 1;
   height: 100%;
+}
+
+.editTaskBtn, .delTaskBtn {
+  margin-left: 10px;
 }
 
 /* The Close Button */

@@ -113,10 +113,12 @@ pub fn get_categories_names_by_task_id(state: State<DbConnection>, card_id: u32)
         ))
         .unwrap();
 
-    let cat_iter = stmt.query_map([], |row| Ok(row.get(0)?)).unwrap();
+    let cat_iter = stmt
+        .query_map([], |row| Ok(row.get::<usize, String>(0)?))
+        .unwrap();
     let mut cats: Vec<String> = Vec::new();
     for cat in cat_iter {
-        cats.push(cat.unwrap());
+        cats.push(cat.unwrap().trim().to_string());
     }
     cats
 }

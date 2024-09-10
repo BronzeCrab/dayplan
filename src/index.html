@@ -23,9 +23,10 @@
     <div id="myModal" class="modal" data-container-id="">
       <div class="modal-content">
         <textarea id="taskCreateInput" name="name" required></textarea>
-        <select size="6" name="categories" id="categoriesSel" multiple>
+        <!-- todo: set this size dynamically len(categories) -->
+        <select size="8" name="categories" id="categoriesSel" multiple>
         </select>
-        <button id="taskCreateBtn">Create the card!</button>
+        <button id="taskCreateOrEditBtn"></button>
         <i class="fa-solid fa-xmark close"></i>
       </div>
     </div>
@@ -33,15 +34,15 @@
     <section>
       <div class="container" style="border: solid red;">
         <h5></h5>
-        <i class="fa-solid fa-plus openModalBtn"></i>
+        <i class="fa-solid fa-plus openModalCreateBtn"></i>
       </div>
       <div class="container" style="border: solid grey;">
         <h5></h5>
-        <i class="fa-solid fa-plus openModalBtn"></i>
+        <i class="fa-solid fa-plus openModalCreateBtn"></i>
       </div>
       <div class="container" style="border: solid green;">
         <h5></h5>
-        <i class="fa-solid fa-plus openModalBtn"></i>
+        <i class="fa-solid fa-plus openModalCreateBtn"></i>
       </div>
     </section>
 
