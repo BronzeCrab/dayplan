@@ -624,6 +624,7 @@ async function updateLineChart(containerId, flag) {
 async function setCategoriesOptions() {
   let cats = await invoke('get_categories');
   let catSelectEl = document.getElementById("categoriesSel");
+  catSelectEl.setAttribute("size", cats.length);
   for (let i = 0; i < cats.length; i++) {
     const newOption = document.createElement("option");
     newOption.setAttribute("value", cats[i][0]);
