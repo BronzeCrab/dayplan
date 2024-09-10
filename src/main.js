@@ -355,9 +355,14 @@ async function getAndSetContainersIdsAndNames(currentDate) {
         // replace containers id's and name:
         for (let i = 0; i < containersFromRust.length; i++) {
           containers[i].id = containersFromRust[i].id;
+          // todo: why were here have first node - TEXT_NODE?
+          console.assert(
+            containers[i].childNodes[0].nodeType === Node.TEXT_NODE,
+            "ERROR: wrong first node type in container"
+          );
           console.assert(
             containers[i].childNodes[1].nodeType === Node.ELEMENT_NODE,
-            "ERROR: wrong node type in container"
+            "ERROR: wrong second node type in container"
           );
           containers[i].childNodes[1].innerHTML = containersFromRust[i].status;
         }
