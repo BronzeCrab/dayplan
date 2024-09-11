@@ -445,7 +445,13 @@ fn try_to_create_date_and_containers(
 fn get_curr_active_date(state: State<DbConnection>) -> String {
     let conn: &Connection = &state.db_conn;
     match try_to_select_active_date(conn) {
-        Ok(res) => res,
+        Ok(res) => {
+            if res.trim().to_lowercase() == "info: can't find active date".trim().to_lowercase() {
+                panic!("Error: can't find active date")
+            } else {
+                res
+            }
+        }
         Err(_err) => "INFO: can't find active date".to_string(),
     }
 }
