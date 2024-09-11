@@ -119,16 +119,96 @@ fn create_task_categories_relations(
 }
 
 fn create_daydate(conn: &Connection, date: &str) -> Result<u32, Error> {
+    // here we have 3 cases:
+    // 1 - db doesn't contain any is_active date
+    // 2 - db do contain is_active date, but it's the same as date (do nothing)
+    // 3 - db do contain is_active date, it's not the same
+
+    // try to find active date:
     let mut stmt = conn
         .prepare(&format!(
-            "INSERT INTO daydate (date) VALUES
-            ('{date}') RETURNING daydate.id;"
+            "SELECT daydate.id FROM daydate WHERE daydate.is_active = 1;"
         ))
         .unwrap();
 
     let rows = stmt.query([]).unwrap();
     match rows.map(|r| r.get(0)).collect::<Vec<u32>>() {
-        Ok(res) => Ok(res[0]),
+        Ok(res) => {
+            if res.len() == 1 {
+                let current_active_daydate_id: u32 = res[0];
+                // here we need to check if active daydate is the same or not:
+                let mut stmt = conn
+                    .prepare(&format!(
+                        "SELECT daydate.id FROM daydate WHERE daydate.date = '{date}'
+                        AND 
+                        daydate.is_active = 1;"
+                    ))
+                    .unwrap();
+                let rows = stmt.query([]).unwrap();
+                let res2 = rows.map(|r| r.get(0)).collect::<Vec<u32>>().unwrap();
+                // here if we found, that current active date is not match:
+                if res2.len() == 0 {
+                    // here we have two cases:
+                    // first - such daydate exist, but it's not active, other daydate is active
+                    // second - such daydate doesn't exist, but there is some other active date
+                    // in both cases first reset current active daydate:
+                    let _ = conn.execute(
+                        &format!(
+                            "UPDATE daydate SET is_active = 0 WHERE 
+                            is_active = 1 AND id = {current_active_daydate_id};"
+                        ),
+                        (),
+                    );
+                    // then, just try to create new active daydate:
+                    let mut stmt = conn
+                        .prepare(&format!(
+                            "INSERT INTO daydate (date, is_active) VALUES 
+                            ('{date}', 1) RETURNING daydate.id;"
+                        ))
+                        .unwrap();
+                    let rows = stmt.query([]).unwrap();
+                    match rows.map(|r| r.get(0)).collect::<Vec<u32>>() {
+                        Ok(res) => return Ok(res[0]),
+                        // or we should just update is_active to true in existing
+                        Err(err) => {
+                            println!("Indeed we are here, err is {:?}", err);
+                            let _ = conn.execute(
+                                &format!(
+                                    "UPDATE daydate SET is_active = 1 WHERE 
+                                    daydate.is_active = 0 AND daydate.date = '{date}';"
+                                ),
+                                (),
+                            );
+                            return Ok(current_active_daydate_id);
+                        }
+                    };
+                }
+                // if we are here, then active daydate is the same as date param of
+                // this func, just return current_active_daydate_id
+                else if res2.len() == 1 {
+                    return Ok(current_active_daydate_id);
+                } else {
+                    panic!("unreachable");
+                }
+            } else if res.len() > 1 {
+                panic!("amount of active daydate is > 1")
+            } else if res.len() == 0 {
+                // here we need create new active daydate on date:
+                let mut stmt = conn
+                    .prepare(&format!(
+                        "INSERT INTO daydate (date, is_active) VALUES 
+                        ('{date}', 1) RETURNING daydate.id;"
+                    ))
+                    .unwrap();
+                let rows = stmt.query([]).unwrap();
+                match rows.map(|r| r.get(0)).collect::<Vec<u32>>() {
+                    Ok(res) => return Ok(res[0]),
+                    Err(err) => return Err(err),
+                };
+            } else {
+                panic!("amount of active daydate is < 0")
+            }
+        }
         Err(err) => Err(err),
     }
 }
@@ -193,7 +273,8 @@ fn try_to_create_db_tables(conn: &Connection) -> Result<(), Error> {
     conn.execute(
         "CREATE TABLE daydate (
             id    INTEGER PRIMARY KEY,
-            date DATE NOT NULL UNIQUE
+            date DATE NOT NULL UNIQUE,
+            is_active INTEGER
         );
         ",
         (),
@@ -314,7 +395,6 @@ fn get_categories(state: State<DbConnection>) -> Vec<[String; 2]> {
     cats
 }
 
-#[tauri::command]
 fn get_init_date() -> String {
     Local::now().date_naive().to_string()
 }
@@ -338,7 +418,11 @@ fn try_to_create_date_and_containers(
     match create_daydate(&conn, current_date_str) {
         Ok(date_id) => match create_containers(&conn, date_id) {
             Ok(containers) => {
-                println!("INFO: ok of create date containers. Res: {:?}", containers);
+                println!(
+                    "INFO: ok of create daydate with date_id={date_id}, 
+                    and containers. Res: {:?}",
+                    containers
+                );
                 containers
             }
             Err(error) => {
@@ -354,6 +438,35 @@ fn try_to_create_date_and_containers(
             // in this case, we should just get containers ids of current_date:
             get_containers(&conn, current_date_str)
         }
+    }
+}
+
+#[tauri::command]
+fn get_curr_active_date(state: State<DbConnection>) -> String {
+    let conn: &Connection = &state.db_conn;
+    match try_to_select_active_date(conn) {
+        Ok(res) => res,
+        Err(_err) => "INFO: can't find active date".to_string(),
+    }
+}
+
+fn try_to_select_active_date(conn: &Connection) -> Result<String, Error> {
+    let mut stmt = conn
+        .prepare(&format!(
+            "SELECT daydate.date FROM daydate WHERE daydate.is_active = 1;"
+        ))
+        .unwrap();
+
+    let rows = stmt.query([]).unwrap();
+    match rows.map(|r| r.get(0)).collect::<Vec<String>>() {
+        Ok(res) => {
+            if res.len() == 1 {
+                return Ok(res[0].clone());
+            } else {
+                return Ok("INFO: can't find active date".to_string());
+            }
+        }
+        Err(err) => Err(err),
     }
 }
 
@@ -397,6 +510,22 @@ fn main() {
                 Err(error) => println!("ERROR: create categories - {:?}", error),
             }
 
+            match try_to_select_active_date(&conn) {
+                Ok(res) => {
+                    if res.trim().to_lowercase() == "info: can't find active date".trim().to_lowercase() {
+                        let today_date: String = get_init_date();
+                        match create_daydate(&conn, &today_date) {
+                            Ok(res) => println!("INFO: created first active date on init, date is {today_date}, date_id is {res}"),
+                            Err(err) => println!("ERROR: created first active date: {err}"),
+                        }
+                    }
+                    else {
+                        println!("Current active date is {:?}, do nothing", res);
+                    }
+                },
+                Err(error) => println!("ERROR: try_to_select_active_date - {:?}", error),      
+            }
+
             app.manage(DbConnection { db_conn: conn });
 
             Ok(())
@@ -406,7 +535,7 @@ fn main() {
             get_cards,
             create_card,
             delete_card,
-            get_init_date,
+            get_curr_active_date,
             get_prev_or_next_date,
             try_to_create_date_and_containers,
             get_categories,

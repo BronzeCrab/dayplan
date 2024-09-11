@@ -103,9 +103,9 @@ async function getCards(currentDate) {
   });
 }
 
-async function initGetDate() {
-  await invoke('get_init_date').then((todayDate) => {
-      dateMsgEl.textContent = todayDate;
+async function getCurrActiveDate() {
+  await invoke('get_curr_active_date').then((currDate) => {
+      dateMsgEl.textContent = currDate;
    });
 }
 
@@ -376,6 +376,9 @@ async function getAndSetContainersIdsAndNames(currentDate) {
           );
           containers[i].childNodes[1].innerHTML = containersFromRust[i].status;
         }
+      }
+      else {
+        console.assert(false, `ERROR: recieved 0 containers for ${currentDate}`);
       }
   });
 }
@@ -716,7 +719,7 @@ function updatePolarChart(categoriesNames, flag) {
 window.addEventListener("DOMContentLoaded", async () => {
   dateMsgEl = document.querySelector("#date-msg");
 
-  await initGetDate();
+  await getCurrActiveDate();
   await getAndSetContainersIdsAndNames(dateMsgEl.textContent);
   await getCards(dateMsgEl.textContent);
   handleTaskDelete();
