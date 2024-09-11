@@ -172,16 +172,18 @@ fn create_daydate(conn: &Connection, date: &str) -> Result<u32, Error> {
                         // or we should just update is_active to true in existing
                         Err(err) => {
                             println!("Indeed we are here, err is {:?}", err);
-                            let _ = conn.execute(
-                                &format!(
+                            let mut stmt = conn
+                                .prepare(&format!(
                                     "UPDATE daydate SET is_active = 1 WHERE 
-                                    daydate.is_active = 0 AND daydate.date = '{date}';"
-                                ),
-                                (),
-                            );
-                            return Ok(current_active_daydate_id);
+                                    daydate.is_active = 0 AND daydate.date = '{date}'
+                                    RETURNING daydate.id;"
+                                ))
+                                .unwrap();
+                            let rows = stmt.query([]).unwrap();
+                            let res = rows.map(|r| r.get(0)).collect::<Vec<u32>>().unwrap();
+                            return Ok(res[0]);
                         }
-                    };
+                    }
                 }
                 // if we are here, then active daydate is the same as date param of
                 // this func, just return current_active_daydate_id
@@ -214,30 +216,58 @@ fn create_daydate(conn: &Connection, date: &str) -> Result<u32, Error> {
 }
 
 fn create_containers(conn: &Connection, date_id: u32) -> Result<Vec<Container>, Error> {
-    let mut containers: Vec<Container> = Vec::new();
-    let statuses = ["todo", "doing", "done"];
-    for status in statuses {
-        let mut stmt = conn
-            .prepare(&format!(
-                "INSERT INTO container (status, date_id) VALUES ('{status}', '{date_id}') 
-            RETURNING container.id, container.status, container.date_id;"
-            ))
-            .unwrap();
+    // try to check if containers for this date are already created:
+    let mut stmt = conn
+        .prepare(&format!(
+            "SELECT container.id, container.status, container.date_id
+             FROM container WHERE container.date_id = {date_id};"
+        ))
+        .unwrap();
 
-        let cont_iter = stmt
-            .query_map([], |row| {
-                Ok(Container {
-                    id: row.get(0)?,
-                    status: row.get(1)?,
-                    date_id: row.get(2)?,
-                })
+    let cont_iter = stmt
+        .query_map([], |row| {
+            Ok(Container {
+                id: row.get(0)?,
+                status: row.get(1)?,
+                date_id: row.get(2)?,
             })
-            .unwrap();
-        for cont in cont_iter {
-            containers.push(cont.unwrap());
-        }
+        })
+        .unwrap();
+    let mut containers: Vec<Container> = Vec::new();
+    for cont in cont_iter {
+        containers.push(cont.unwrap());
     }
-    Ok(containers)
+
+    let statuses = ["todo", "doing", "done"];
+
+    if containers.len() == statuses.len() {
+        return Ok(containers);
+    } else if containers.len() == 0 {
+        for status in statuses {
+            let mut stmt = conn
+                .prepare(&format!(
+                    "INSERT INTO container (status, date_id) VALUES ('{status}', '{date_id}') 
+                RETURNING container.id, container.status, container.date_id;"
+                ))
+                .unwrap();
+
+            let cont_iter = stmt
+                .query_map([], |row| {
+                    Ok(Container {
+                        id: row.get(0)?,
+                        status: row.get(1)?,
+                        date_id: row.get(2)?,
+                    })
+                })
+                .unwrap();
+            for cont in cont_iter {
+                containers.push(cont.unwrap());
+            }
+        }
+        return Ok(containers);
+    } else {
+        panic!("unreachable");
+    }
 }
 
 fn create_categories(conn: &Connection) -> Result<Vec<u32>, Error> {

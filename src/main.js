@@ -85,11 +85,16 @@ function createNewDraggableDiv(card) {
 
 function appendDraggableToContainer(newDiv, containerId) {
   let containers = document.getElementsByClassName("container");
+  let containerIsFound = false;
   for (let i = 0; i < containers.length; i++) {
     if (parseInt(containers[i].id) === containerId) {
       containers[i].appendChild(newDiv);
+      containerIsFound = true;
       break;
     }
+  }
+  if (containerIsFound === false) {
+    console.assert(false, "appendDraggableToContainer error, cant find container!");
   }
 }
 
