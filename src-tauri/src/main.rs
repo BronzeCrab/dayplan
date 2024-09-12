@@ -2,7 +2,7 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 use std::usize;
 
-use rusqlite::{Connection, Error, Result};
+use rusqlite::{Connection, Error, Result, Statement};
 use std::fs::create_dir;
 mod models;
 use chrono::offset::Local;
@@ -215,15 +215,7 @@ fn create_daydate(conn: &Connection, date: &str) -> Result<u32, Error> {
     }
 }
 
-fn create_containers(conn: &Connection, date_id: u32) -> Result<Vec<Container>, Error> {
-    // try to check if containers for this date are already created:
-    let mut stmt = conn
-        .prepare(&format!(
-            "SELECT container.id, container.status, container.date_id
-             FROM container WHERE container.date_id = {date_id};"
-        ))
-        .unwrap();
-
+fn get_and_set_containers(mut stmt: Statement, containers: &mut Vec<Container>) {
     let cont_iter = stmt
         .query_map([], |row| {
             Ok(Container {
@@ -233,10 +225,23 @@ fn create_containers(conn: &Connection, date_id: u32) -> Result<Vec<Container>, 
             })
         })
         .unwrap();
-    let mut containers: Vec<Container> = Vec::new();
     for cont in cont_iter {
-        containers.push(cont.unwrap());
+        let _ = &containers.push(cont.unwrap());
     }
+}
+
+fn create_containers(conn: &Connection, date_id: u32) -> Result<Vec<Container>, Error> {
+    // try to check if containers for this date are already created:
+    let stmt: Statement<'_> = conn
+        .prepare(&format!(
+            "SELECT container.id, container.status, container.date_id
+             FROM container WHERE container.date_id = {date_id};"
+        ))
+        .unwrap();
+
+    let mut containers: Vec<Container> = Vec::new();
+
+    get_and_set_containers(stmt, &mut containers);
 
     let statuses = ["todo", "doing", "done"];
 
@@ -244,25 +249,14 @@ fn create_containers(conn: &Connection, date_id: u32) -> Result<Vec<Container>, 
         return Ok(containers);
     } else if containers.len() == 0 {
         for status in statuses {
-            let mut stmt = conn
+            let stmt = conn
                 .prepare(&format!(
                     "INSERT INTO container (status, date_id) VALUES ('{status}', '{date_id}') 
                 RETURNING container.id, container.status, container.date_id;"
                 ))
                 .unwrap();
 
-            let cont_iter = stmt
-                .query_map([], |row| {
-                    Ok(Container {
-                        id: row.get(0)?,
-                        status: row.get(1)?,
-                        date_id: row.get(2)?,
-                    })
-                })
-                .unwrap();
-            for cont in cont_iter {
-                containers.push(cont.unwrap());
-            }
+            get_and_set_containers(stmt, &mut containers);
         }
         return Ok(containers);
     } else {
