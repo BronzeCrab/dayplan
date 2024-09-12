@@ -376,8 +376,8 @@ fn get_cards(state: State<DbConnection>, current_date: String) -> Vec<Task> {
     tasks
 }
 
-fn get_containers(conn: &Connection, current_date: &str) -> Vec<Container> {
-    let mut stmt = conn
+fn get_containers_by_date_str(conn: &Connection, current_date: &str) -> Vec<Container> {
+    let stmt = conn
         .prepare(&format!(
             "SELECT container.id, container.status, container.date_id
             FROM container
@@ -385,19 +385,9 @@ fn get_containers(conn: &Connection, current_date: &str) -> Vec<Container> {
             WHERE daydate.date = '{current_date}';"
         ))
         .unwrap();
-    let cont_iter = stmt
-        .query_map([], |row| {
-            Ok(Container {
-                id: row.get(0)?,
-                status: row.get(1)?,
-                date_id: row.get(2)?,
-            })
-        })
-        .unwrap();
+
     let mut containers: Vec<Container> = Vec::new();
-    for cont in cont_iter {
-        containers.push(cont.unwrap());
-    }
+    get_and_set_containers(stmt, &mut containers);
     containers
 }
 
@@ -460,7 +450,7 @@ fn try_to_create_date_and_containers(
         Err(error) => {
             println!("ERROR: create date: {:?}", error);
             // in this case, we should just get containers ids of current_date:
-            get_containers(&conn, current_date_str)
+            get_containers_by_date_str(&conn, current_date_str)
         }
     }
 }
