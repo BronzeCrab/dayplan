@@ -92,3 +92,7 @@ https://stackoverflow.com/questions/20626685/how-do-i-set-distance-between-flexb
 Issue with drag and drop on Windows:
 
 https://github.com/tauri-apps/tauri/issues/6695
+
+There is no `insertAfter` method for some reason:
+
+https://developer.mozilla.org/en-US/docs/Web/API/Node/insertBefore

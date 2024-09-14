@@ -59,6 +59,7 @@ function createNewDraggableDiv(card) {
   newDiv.setAttribute("draggable", "true");
   newDiv.setAttribute("contenteditable", true);
   newDiv.setAttribute("style", "border: solid magenta;");
+  newDiv.setAttribute("containerOrder", card.container_order);
 
   // create inner p with text:
   const newP = document.createElement("p");
@@ -315,19 +316,84 @@ function handleDragging() {
       event.preventDefault();
       const draggedElement = document.querySelector(".dragging");
       let removedFromContainerId = draggedElement.parentNode.id;
-      draggedElement.parentNode.removeChild(draggedElement);
-      container.appendChild(draggedElement);
-      // Then we need to change container_id to new one:
-      await updateCard(draggedElement.id, null, container.id, null);
-      // remove card from this bar in chart:
-      await updateBarChart(removedFromContainerId, "-");
-      // add card for this bar in chart:
-      await updateBarChart(container.id, "+");
+      // we are moving card to another container:
+      if (parseInt(removedFromContainerId) !==  parseInt(container.id)) {
+        draggedElement.parentNode.removeChild(draggedElement);
+        container.appendChild(draggedElement);
+        // Then we need to change container_id to new one:
+        await updateCard(draggedElement.id, null, container.id, null);
+        // remove card from this bar in chart:
+        await updateBarChart(removedFromContainerId, "-");
+        // add card for this bar in chart:
+        await updateBarChart(container.id, "+");
+  
+        // remove card from this line in chart:
+        await updateLineChart(removedFromContainerId, "-");
+        // add card for this line in chart:
+        await updateLineChart(container.id, "+");
+      }
+      else {
+        let allElementsInCountainer = container.childNodes;
+        let otherDraggablesOffsets = [];
+        for (let i = 0; i < allElementsInCountainer.length; i++) {
+          if (
+            allElementsInCountainer[i].className === "draggable"  && 
+            allElementsInCountainer[i].id !== draggedElement.id
+          ) {
+            let otherDraggable = allElementsInCountainer[i];
+            let yOffset = Math.abs(otherDraggable.getBoundingClientRect().y - event.clientY);
+            otherDraggablesOffsets.push(
+              {
+                "otherDraggable": otherDraggable,
+                "yOffset": yOffset
+              }
+            )
+          }
+        }
 
-      // remove card from this line in chart:
-      await updateLineChart(removedFromContainerId, "-");
-      // add card for this line in chart:
-      await updateLineChart(container.id, "+");
+        let minYOffset = Number.POSITIVE_INFINITY;
+        let minIndex = -1;
+        for (let j = 0; j < otherDraggablesOffsets.length; j++) {
+          if (otherDraggablesOffsets[j].yOffset < minYOffset) {
+            minYOffset = otherDraggablesOffsets[j].yOffset;
+            minIndex = j;
+          }
+        }
+
+        console.assert(minIndex !== -1, "ERROR: cant find minium offset element!");
+
+        // he we perform change of order of draggables:
+        draggedElement.parentNode.removeChild(draggedElement);
+        let draggedElementContOrder = draggedElement.getAttribute("containerorder");
+        let otherDraggableContOrder = otherDraggablesOffsets[minIndex].otherDraggable.getAttribute("containerorder");
+        if (parseInt(draggedElementContOrder) < parseInt(otherDraggableContOrder)) {
+          // there is no insertAfter method, for some reason, so using this dirty hack:
+          container.insertBefore(draggedElement, otherDraggablesOffsets[minIndex].otherDraggable.nextSibling);
+        }
+        else {
+          container.insertBefore(draggedElement, otherDraggablesOffsets[minIndex].otherDraggable);
+        }
+
+        // then we need to iterate over all graggables in current
+        // container to collect their new positions:
+        // but also we need reset their order here, on frontend
+        const draggables = document.querySelectorAll(".draggable");
+        let currDraggableIds = [];
+        for (let k = 0; k < draggables.length; k++) {
+          if (parseInt(draggables[k].parentNode.id) === parseInt(container.id)) {
+            currDraggableIds.push(parseInt(draggables[k].id));
+            draggables[k].setAttribute("containerOrder", k);
+          }
+        };
+        
+        console.assert(currDraggableIds.length > 0, "ERROR: currDraggableIds.length <= 0");
+
+        await invoke(
+          "upd_order_in_container",
+          { containerId: parseInt(container.id), currDraggableIds: currDraggableIds }
+        );
+
+      }
     });
   });
 }

@@ -7,6 +7,7 @@ pub struct Task {
     pub status: String,
     pub container_id: u32,
     pub date: String,
+    pub container_order: u32,
 }
 
 #[derive(Debug, Serialize)]

@@ -74,10 +74,19 @@ fn create_card(
         return Err("ERROR: cant create card with empty text!");
     };
     let conn: &Connection = &state.db_conn;
+
     let mut stmt = conn
         .prepare(&format!(
-            "INSERT INTO task (text, container_id) VALUES
-            ('{card_text}', '{container_id}') RETURNING task.id"
+            "SELECT COUNT(*) FROM task WHERE container_id = {container_id};"
+        ))
+        .unwrap();
+    let rows = stmt.query([]).unwrap();
+    let container_order: u32 = rows.map(|r| r.get(0)).collect::<Vec<u32>>().unwrap()[0];
+
+    let mut stmt = conn
+        .prepare(&format!(
+            "INSERT INTO task (text, container_id, container_order) VALUES
+            ('{card_text}', {container_id}, {container_order}) RETURNING task.id;"
         ))
         .unwrap();
 
@@ -98,6 +107,7 @@ fn create_card(
         status: "".to_string(),
         container_id: container_id,
         date: "".to_string(),
+        container_order: container_order,
     })
 }
 
@@ -318,6 +328,7 @@ fn try_to_create_db_tables(conn: &Connection) -> Result<(), Error> {
             id    INTEGER PRIMARY KEY,
             text  TEXT NOT NULL,
             container_id INT NOT NULL,
+            container_order INT NOT NULL,
             FOREIGN KEY (container_id) REFERENCES container
         );
         ",
@@ -351,11 +362,11 @@ fn get_cards(state: State<DbConnection>, current_date: String) -> Vec<Task> {
     let conn: &Connection = &state.db_conn;
     let mut stmt = conn
         .prepare(&format!(
-            "SELECT task.id, task.text, container.status, task.container_id, daydate.date
+            "SELECT task.id, task.text, container.status, task.container_id, daydate.date, task.container_order
             FROM task
             INNER JOIN container ON task.container_id = container.id
             INNER JOIN daydate ON container.date_id = daydate.id
-            WHERE daydate.date = '{current_date}';"
+            WHERE daydate.date = '{current_date}' ORDER BY task.container_order ASC;"
         ))
         .unwrap();
     let task_iter = stmt
@@ -366,6 +377,7 @@ fn get_cards(state: State<DbConnection>, current_date: String) -> Vec<Task> {
                 status: row.get(2)?,
                 container_id: row.get(3)?,
                 date: row.get(4)?,
+                container_order: row.get(5)?,
             })
         })
         .unwrap();
@@ -453,6 +465,27 @@ fn try_to_create_date_and_containers(
             get_containers_by_date_str(&conn, current_date_str)
         }
     }
+}
+
+#[tauri::command]
+fn upd_order_in_container(
+    state: State<DbConnection>,
+    container_id: u32,
+    curr_draggable_ids: Vec<u32>,
+) -> String {
+    let conn: &Connection = &state.db_conn;
+
+    for ind in 0..curr_draggable_ids.len() {
+        let task_id: u32 = curr_draggable_ids[ind];
+        let sql_stmnt = &format!(
+            "UPDATE task SET container_order = {ind} WHERE container_id = {container_id} AND id = {task_id};");
+        conn.execute(sql_stmnt, ()).unwrap();
+    }
+
+    format!(
+        "Hello, from upd_order_in_container! container_id={}",
+        container_id
+    )
 }
 
 #[tauri::command]
@@ -559,6 +592,7 @@ fn main() {
             get_prev_or_next_date,
             try_to_create_date_and_containers,
             get_categories,
+            upd_order_in_container,
             stats::get_stats_4_bar,
             stats::get_stats_4_line,
             stats::get_stats_4_polar,
