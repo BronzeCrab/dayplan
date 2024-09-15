@@ -19,7 +19,7 @@ fn update_card(
     card_text: Option<&str>,
     new_container_id: Option<u32>,
     new_categories_ids: Option<Vec<u32>>,
-) -> Result<String, String> {
+) -> Result<(), String> {
     if card_text.is_some() {
         let txt: &str = card_text.unwrap();
         if txt.trim() == "" {
@@ -42,7 +42,7 @@ fn update_card(
     }
 
     conn.execute(sql_stmnt, ()).unwrap();
-    Ok(format!("Hello, from update_card! card_id={}", card_id))
+    Ok(())
 }
 
 #[tauri::command]
