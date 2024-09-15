@@ -19,7 +19,14 @@ fn update_card(
     card_text: Option<&str>,
     new_container_id: Option<u32>,
     new_categories_ids: Option<Vec<u32>>,
-) -> String {
+) -> Result<String, String> {
+    if card_text.is_some() {
+        let txt: &str = card_text.unwrap();
+        if txt.trim() == "" {
+            return Err("ERROR: cant update card with empty text!".to_string());
+        }
+    };
+
     let conn: &Connection = &state.db_conn;
     let sql_stmnt: &str = if card_text.is_some() {
         let txt: &str = card_text.unwrap();
@@ -35,7 +42,7 @@ fn update_card(
     }
 
     conn.execute(sql_stmnt, ()).unwrap();
-    format!("Hello, from update_card! card_id={}", card_id)
+    Ok(format!("Hello, from update_card! card_id={}", card_id))
 }
 
 #[tauri::command]

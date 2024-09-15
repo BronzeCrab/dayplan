@@ -14,7 +14,13 @@ async function updateCard(cardId, cardText, newContainerId, newCategoriesIds) {
       newContainerId: parseInt(newContainerId),
       newCategoriesIds: newCategoriesIds 
     }
-  );
+  ).then(function(createdCard) {
+    console.log('ok upd card');
+  })
+  .catch(function(rejMsg) {
+    let el = document.getElementById("rejMsg");
+    el.innerHTML = rejMsg;
+  });
 }
 
 async function deleteCard(cardId) {
@@ -31,8 +37,9 @@ async function createCard(cardText, containerId, categoriesIds) {
   ).then(function(createdCard) {
     card = createdCard;
   })
-  .catch(function(rej) {
-    console.log(rej);
+  .catch(function(rejMsg) {
+    let el = document.getElementById("rejMsg");
+    el.innerHTML = rejMsg;
   });
 
   if (card === undefined) {
@@ -203,6 +210,9 @@ function handleModal() {
       var taskCreateInput = document.getElementById("taskCreateInput");
       taskCreateInput.value = "";
 
+      let el = document.getElementById("rejMsg");
+      el.innerHTML = "";
+
       // here we need also to de-select all categories options:
       let catSelectEl = document.getElementById("categoriesSel");
       let chilsOfSelect = catSelectEl.childNodes;
@@ -261,6 +271,9 @@ async function addEditCardOnclick(editTaskI) {
     // we need to change some data in modal:
     var taskCreateOrEditBtn = document.getElementById("taskCreateOrEditBtn");
     taskCreateOrEditBtn.innerHTML = "update card".toLowerCase().trim();
+
+    let el = document.getElementById("rejMsg");
+    el.innerHTML = "";
 
     // get current draggable:
     let graggable = editTaskI.parentNode;
@@ -334,7 +347,8 @@ function handleDragging() {
       }
       else {
         let allElementsInCountainer = container.childNodes;
-        let otherDraggablesOffsets = [];
+        let otherDraggableMinOffset = null;
+        let minYOffset = Number.POSITIVE_INFINITY;
         for (let i = 0; i < allElementsInCountainer.length; i++) {
           if (
             allElementsInCountainer[i].className === "draggable"  && 
@@ -342,36 +356,25 @@ function handleDragging() {
           ) {
             let otherDraggable = allElementsInCountainer[i];
             let yOffset = Math.abs(otherDraggable.getBoundingClientRect().y - event.clientY);
-            otherDraggablesOffsets.push(
-              {
-                "otherDraggable": otherDraggable,
-                "yOffset": yOffset
-              }
-            )
+            if (yOffset < minYOffset) {
+              minYOffset = yOffset;
+              otherDraggableMinOffset = otherDraggable;
+            }
           }
         }
 
-        let minYOffset = Number.POSITIVE_INFINITY;
-        let minIndex = -1;
-        for (let j = 0; j < otherDraggablesOffsets.length; j++) {
-          if (otherDraggablesOffsets[j].yOffset < minYOffset) {
-            minYOffset = otherDraggablesOffsets[j].yOffset;
-            minIndex = j;
-          }
-        }
-
-        console.assert(minIndex !== -1, "ERROR: cant find minium offset element!");
+        console.assert(otherDraggableMinOffset !== null, "ERROR: cant find minium offset element!");
 
         // he we perform change of order of draggables:
         draggedElement.parentNode.removeChild(draggedElement);
         let draggedElementContOrder = draggedElement.getAttribute("containerorder");
-        let otherDraggableContOrder = otherDraggablesOffsets[minIndex].otherDraggable.getAttribute("containerorder");
+        let otherDraggableContOrder = otherDraggableMinOffset.getAttribute("containerorder");
         if (parseInt(draggedElementContOrder) < parseInt(otherDraggableContOrder)) {
           // there is no insertAfter method, for some reason, so using this dirty hack:
-          container.insertBefore(draggedElement, otherDraggablesOffsets[minIndex].otherDraggable.nextSibling);
+          container.insertBefore(draggedElement, otherDraggableMinOffset.nextSibling);
         }
         else {
-          container.insertBefore(draggedElement, otherDraggablesOffsets[minIndex].otherDraggable);
+          container.insertBefore(draggedElement, otherDraggableMinOffset);
         }
 
         // then we need to iterate over all graggables in current
