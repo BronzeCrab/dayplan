@@ -143,9 +143,9 @@ fn create_daydate(conn: &Connection, date: &str) -> Result<u32, Error> {
 
     // try to find active date:
     let mut stmt = conn
-        .prepare(&format!(
+        .prepare(
             "SELECT daydate.id FROM daydate WHERE daydate.is_active = 1;"
-        ))
+        )
         .unwrap();
 
     let rows = stmt.query([]).unwrap();

@@ -96,3 +96,7 @@ https://github.com/tauri-apps/tauri/issues/6695
 There is no `insertAfter` method for some reason:
 
 https://developer.mozilla.org/en-US/docs/Web/API/Node/insertBefore
+
+How to break a row in css (flexbox):
+
+https://tobiasahlin.com/blog/flexbox-break-to-new-row/
