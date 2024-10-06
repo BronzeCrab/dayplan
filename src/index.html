@@ -9,70 +9,81 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>DayPlan App</title>
     <script type="module" src="/main.js" defer></script>
+    <script type="module" src="/tabs.js" defer></script>
   </head>
 
   <body>
     <h1>Welcome to DayPlan!</h1>
 
-    <p id="date-msg"></p>
-    <div class="arrow">
-      <i class="fa-solid fa-arrow-left" id="leftArrow"></i>
-      <i class="fa-solid fa-arrow-right" id="rightArrow"></i>
+    <div class="tab">
+      <button class="tablinks">Days</button>
+      <button class="tablinks">Stats</button>
     </div>
 
-    <div id="myModal" class="modal" data-container-id="">
-      <div class="modal-content">
-        <textarea id="taskCreateInput" name="name" required></textarea>
-        <select name="categories" id="categoriesSel" multiple>
-        </select>
-        <button id="taskCreateOrEditBtn"></button>
-        <i class="fa-solid fa-xmark close"></i>
-        <div class="break"></div>
-        <p id="rejMsg"></p>
+    <div id="days" class="tabcontent">
+      <p id="date-msg"></p>
+      <div class="arrow">
+        <i class="fa-solid fa-arrow-left" id="leftArrow"></i>
+        <i class="fa-solid fa-arrow-right" id="rightArrow"></i>
+      </div>
+  
+      <div id="myModal" class="modal" data-container-id="">
+        <div class="modal-content">
+          <textarea id="taskCreateInput" name="name" required></textarea>
+          <select name="categories" id="categoriesSel" multiple>
+          </select>
+          <button id="taskCreateOrEditBtn"></button>
+          <i class="fa-solid fa-xmark close"></i>
+          <div class="break"></div>
+          <p id="rejMsg"></p>
+        </div>
+      </div>
+  
+      <section>
+        <div class="container" style="border: solid red;">
+          <h5></h5>
+          <i class="fa-solid fa-plus openModalCreateBtn"></i>
+        </div>
+        <div class="container" style="border: solid grey;">
+          <h5></h5>
+          <i class="fa-solid fa-plus openModalCreateBtn"></i>
+        </div>
+        <div class="container" style="border: solid green;">
+          <h5></h5>
+          <i class="fa-solid fa-plus openModalCreateBtn"></i>
+        </div>
+      </section>
+    </div>
+
+    <div id="stats" class="tabcontent">
+      <br>
+      <hr>
+      <br>
+  
+      <div>
+        <h3>This is total amount of all cards by statuses:</h3>
+        <canvas id="barChart"></canvas>
+      </div>
+  
+      <br>
+      <hr>
+      <br>
+  
+      <div>
+        <h3>This is amount of cards by statuses by days:</h3>
+        <canvas id="lineChart"></canvas>
+      </div>
+  
+      <br>
+      <hr>
+      <br>
+  
+      <div>
+        <h3>This is amount of tasks by categories:</h3>
+        <canvas id="polarChart"></canvas>
       </div>
     </div>
 
-    <section>
-      <div class="container" style="border: solid red;">
-        <h5></h5>
-        <i class="fa-solid fa-plus openModalCreateBtn"></i>
-      </div>
-      <div class="container" style="border: solid grey;">
-        <h5></h5>
-        <i class="fa-solid fa-plus openModalCreateBtn"></i>
-      </div>
-      <div class="container" style="border: solid green;">
-        <h5></h5>
-        <i class="fa-solid fa-plus openModalCreateBtn"></i>
-      </div>
-    </section>
-
-    <br>
-    <hr>
-    <br>
-
-    <div>
-      <h3>This is total amount of all cards by statuses:</h3>
-      <canvas id="barChart"></canvas>
-    </div>
-
-    <br>
-    <hr>
-    <br>
-
-    <div>
-      <h3>This is amount of cards by statuses by days:</h3>
-      <canvas id="lineChart"></canvas>
-    </div>
-
-    <br>
-    <hr>
-    <br>
-
-    <div>
-      <h3>This is amount of tasks by categories:</h3>
-      <canvas id="polarChart"></canvas>
-    </div>
 
     <script src="./assets/chartjs/chart.js"></script>
   </body>
