@@ -521,6 +521,8 @@ function handleArrows() {
   }
 }
 
+Chart.defaults.font.size = 28;
+
 async function drawBarChart() {
   let stats = await invoke("get_stats_4_bar");
   let labels = [];
@@ -543,15 +545,6 @@ async function drawBarChart() {
       }]
     },
     options: {
-      plugins: {
-        legend: {
-          labels: {
-            font: {
-                size: 22
-            }
-          }
-        }
-      },
       scales: {
         y: {
           beginAtZero: true
