@@ -238,7 +238,15 @@ function handleModal() {
     if (event.target == modal) {
       modal.style.display = "none";
     }
-  } 
+  }
+
+  // Wen user press escape btn also close it:
+  window.addEventListener('keydown', function(e) {
+    if (e.key == "Escape") {
+      modal.style.display = "none";
+    }
+  });
+
 }
 
 // add delete onclick to all delTaskBtn:
